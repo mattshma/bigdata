@@ -105,4 +105,5 @@ HBase使用HFile格式存储文件，因此可以用程序将数据写成HFile�
 ---
 - [Snapshots](https://hbase.apache.org/book.html#ops.snapshots)
 - [distcp](https://hadoop.apache.org/docs/r1.0.4/cn/distcp.html)
+- [Online Apache HBase Backups with CopyTable](http://blog.cloudera.com/blog/2012/06/online-hbase-backups-with-copytable-2/)
 - [Approaches to Backup and Disaster Recovery in HBase](http://blog.cloudera.com/blog/2013/11/approaches-to-backup-and-disaster-recovery-in-hbase/)
