@@ -97,9 +97,27 @@ HBase使用HFile格式存储文件，因此可以用程序将数据写成HFile�
 - 每个region产生一个HFile文件
 - 将HFile文件导入到HBase中
 
-### 使用集群
+### 使用复制
 
-暂略
+HBase复制用于不同集群中复制数据，其以主推送的形式进行，即Master向各Slave推送数据。类似Mysql以Binlog进行复制，HBase的复制基于HLog（WAL）。复制是异步的，这意味主集群的修改不能马上在从集群上同步（最终一致性）。
+
+## 实践
+在实际情况中，有集群A(0.98)和集群B(1.0)，现需要将集群A中的部分表拷贝到集群B中。
+
+在集群B上的一个Yarn的gateway上执行如下脚本，其中distcp用了压缩。
+```ssh
+tmpdir="tmp/hbase_migrate"
+
+# ssh到A集群Yarn的gateway上export表
+ssh evans@A_GATEWAY_IP:PORT hbase org.apache.hadoop.hbase.mapreduce.Export -Dmapreduce.map.java.opts=-Xmx4g  -Dmapreduce.map.memory.mb=5000 $source_table_name hdfs://A_HDFS_IP:PORT/$tmpdir
+
+# disctp from A to B
+HADOOP_USER_NAME=hbase hadoop distcp -Dmapreduce.job.queuename=root.hadoop -Dmapreduce.job.name=hbase.${source_table_name} -update -delete -strategy dynamic -log /user/hbase/_distcplogs/tmp.$(date +%s).$RANDOM -update -delete webhdfs://A_IP:PORT/$tmpdir $tmpdir
+
+# import
+HADOOP_USER_NAME=hbase hbase -Dhbase.import.version=0.98 org.apache.hadoop.hbase.mapreduce.Import $source_table_name $tmpdir
+```
+
 
 参考：
 ---
