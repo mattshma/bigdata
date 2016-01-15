@@ -8,6 +8,10 @@ WARN  [main] zookeeper.ZKUtil: hconnection-0x766245a4, quorum=localhost:2181, ba
 org.apache.zookeeper.KeeperException$ConnectionLossException: KeeperErrorCode = ConnectionLoss for /hbase
 ```
 
+出现这种情况原因都是hbase无法连接zookeeper。个人碰到有如下情况导致该问题。
+
+## 先关HMaster，但未关REST服务，再启动HMaster报错
+
 启动zkCli.zh，报错如下：
 ```
 INFO  [main-SendThread(localhost:2181):ClientCnxn$SendThread@966] - Opening socket connection to server localhost/127.0.0.1:2181. Will not attempt to authenticate using SASL (Unable to locate a login configuration)
@@ -26,5 +30,8 @@ WARN  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181] server.NIOServerCnxnFactory: T
 WARN  [main] zookeeper.RecoverableZooKeeper: Possibly transient ZooKeeper, quorum=localhost:2181, exception=org.apache.zookeeper.KeeperException$ConnectionLossException: KeeperErrorCode = ConnectionLoss for /hbase
 ERROR [main] zookeeper.RecoverableZooKeeper: ZooKeeper create failed after 4 attempts
 ```
-想到rest服务还没关，于是kill进程后，重启hbase master，成功。
+想到rest服务还没关，于是kill进程后，重启hbase master，成功。再启动REST服务即可。
+
+## zookeeper服务器防火墙未关闭
+在zookeeper服务器上关闭防火墙即可。
 
