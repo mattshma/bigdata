@@ -58,10 +58,10 @@ events {
 http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
-
-    log_format  main  '$request_time\t$upstream_response_time\t$remote_addr\t$request_length\t$upstream_addr\t$time_local\t'
+    
+    log_format  main  '$request_time\t$upstream_response_time\t$remote_addr\t$upstream_addr\t[$time_local]\t'
                       '$host\t$request\t$status\t$bytes_sent\t'
-                      '$http_referer\t$http_user_agent\t$gzip_ratio\t$http_x_forwarded_for\t$server_addr\t$server_port\t$cookie_aQQ_ajkguid\t$sent_http_ajk';
+                      '$http_referer\t$http_user_agent\t$gzip_ratio\t$http_x_forwarded_for\t$server_addr';
 
     access_log  /data/logs/nginx/access.log  main;
 
@@ -249,14 +249,14 @@ gzip 的压缩比例。
 - $server_addr   
 接受请求的服务器地址。为计算这个值，通常需要进行一次系统调用。为了避免系统调用，必须指定 `listen` 指令的地址，并且使用 `bind` 参数。
 
-- $server_port   
+- $server\_port    
 接受请求的虚拟主机的端口。
 
-- $cookie_<i>name</i>    
-名为 _name_ 的cookie。
+- $cookie\_<i>name</i>    
+名为 \_name\_ 的cookie。
 
-- $sent_http_<i>name</i>     
-任意响应头的值；后面的 _name_ 为响应头中相应字段的小写字母，并使用 "_" 来代替中划线。
+- $sent_http\_<i>name</i>     
+任意响应头的值；后面的 \_name\_ 为响应头中相应字段的小写字母，并使用 "_" 来代替中划线。
 
 
 
