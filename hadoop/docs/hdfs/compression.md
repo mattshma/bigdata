@@ -67,7 +67,7 @@ export PATH=$PATH:$MAVEN_HOME/bin
 ```
 <property>
     <name>io.compression.codecs</name>
-    <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compress.DeflateCodec,org.apache.hadoop.io.compress.SnappyCodec,org.apache.hadoop.io.compress.Lz4Codec,com.hadoop.compression.lzo.LzopCodec</value>
+    <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compress.DeflateCodec,org.apache.hadoop.io.compress.SnappyCodec,org.apache.hadoop.io.compress.Lz4Codec,com.hadoop.compression.lzo.LzoCodec,com.hadoop.compression.lzo.LzopCodec</value>
   </property>
   <property>
       <name>io.compression.codec.lzo.class</name>
@@ -89,6 +89,13 @@ export PATH=$PATH:$MAVEN_HOME/bin
      <value>LD_LIBRARY_PATH=/opt/cloudera/parcels/CDH/lib/hadoop/</value>
 </property>
 ```
+
+> LzoCodec与LzopCodec的比较
+> LzoCodec 与 LzopCodec的区别如同Lzo与Lzop的区别，前者是一种快速的压缩库，后者在前者的基础上添加了额外的文件头。
+> 
+> 若使用LzoCodec作为Reduce输出，则输出文件的扩展名为`.lzo_deflate`，其无法作为MapReduce的的输入，`DistributedLzoIndexer`也无法为其创建索引；若使用LzopCodec作为Reduce输出，则输出文件的扩展名为 `.lzo`。所以一般而言，map输出的中间结果使用LzoCodec，而reduce输出使用LzopCodec。可参考[What's the difference between the LzoCodec and the LzopCodec in Hadoop-LZO?](https://www.quora.com/Whats-the-difference-between-the-LzoCodec-and-the-LzopCodec-in-Hadoop-LZO)。
+>
+
 
 生成lzo索引文件
 ===
@@ -116,6 +123,10 @@ hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.DistributedLz
 ```
 export LD_LIBRARY_PATH=/usr/local/lzo-2.09/lib
 ```
+
+MapReduce压缩文件
+===
+若在HDFS中已经存在的文件，要通过本地lzop压缩的话，还需要先下载文件，再压缩，再上传，显然低效烦琐，可以通过读取文件然后在Reduce阶段进行压缩。[todo]
 
 Reference
 ===
