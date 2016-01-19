@@ -90,7 +90,9 @@ export PATH=$PATH:$MAVEN_HOME/bin
 </property>
 ```
 
-> LzoCodec与LzopCodec的比较
+
+*LzoCodec与LzopCodec的比较*
+>
 > LzoCodec 与 LzopCodec的区别如同Lzo与Lzop的区别，前者是一种快速的压缩库，后者在前者的基础上添加了额外的文件头。
 > 
 > 若使用LzoCodec作为Reduce输出，则输出文件的扩展名为`.lzo_deflate`，其无法作为MapReduce的的输入，`DistributedLzoIndexer`也无法为其创建索引；若使用LzopCodec作为Reduce输出，则输出文件的扩展名为 `.lzo`。所以一般而言，map输出的中间结果使用LzoCodec，而reduce输出使用LzopCodec。可参考[What's the difference between the LzoCodec and the LzopCodec in Hadoop-LZO?](https://www.quora.com/Whats-the-difference-between-the-LzoCodec-and-the-LzopCodec-in-Hadoop-LZO)。
