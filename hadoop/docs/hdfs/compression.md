@@ -1,41 +1,20 @@
 压缩
-===
-从效率和可分块的角度来看，选择lzo做为压缩方式。
+---
+目前hadoop的压缩有gzip, lzo, snappy等，许多文章都有对这几种压缩的对比，此不赘述。从效率和可分块的角度来看，这里选择lzo做为压缩方式。
 
-准备
+安装
 ===
-在正式安装hadoop-lzo前，还需要安装如下软件。
 
-### lzo
-在[lzo](http://www.oberhumer.com/opensource/lzo/download/)中下载并解压安装：
+### 集群节点安装lzo
+在Yarn的各节点上安装lzo：`yum -y install lzo`。当然也可在[官网](http://www.oberhumer.com/opensource/lzo/download/)下载后编译安装:
 
 ```
 # ./configure --enable-shared --prefix /usr/local/lzo-2.09
 # make && make install
 ```
 
-### lzop
-下载[lzop](http://www.lzop.org/)，解压：
-
-```
-# tar xvzf lzop-1.03.tar.gz
-# cd lzop-1.03
-# export C_INCLUDE_PATH=/usr/local/lzo-2.09/include
-# export LIBRARY_PATH=/usr/local/lzo-2.09/lib
-# make; make install
-```
-可以测试下该lzop。
-
-### maven
-注意java版本与maven版本之前的兼容性，maven3.3版本以上需要java1.7。maven下载并解压后，设置`MAVEN_HOME`和`PATH`：
-```
-# vim /etc/profile
-export MAVEN_HOME=/usr/local/maven
-export PATH=$PATH:$MAVEN_HOME/bin
-```
-
-安装hadoop-lzo
-===
+### 集群节点安装lzop
+**注意：若不需要在本地使用lzop压缩，本步骤可忽略。**
 
 - 下载`git clone https://github.com/twitter/hadoop-lzo/`。
 - 修改pom.xml文件：
@@ -61,35 +40,33 @@ export PATH=$PATH:$MAVEN_HOME/bin
 # export LIBRARY_PATH=/usr/local/lzo-2.09/lib
 # mvn clean package -Dmaven.test.skip=true`
 ```
-
 - 将生成的jar拷贝到hadoop的lib目录。
-- 修改配置文件core-site.xml:
-```
-<property>
-    <name>io.compression.codecs</name>
-    <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compress.DeflateCodec,org.apache.hadoop.io.compress.SnappyCodec,org.apache.hadoop.io.compress.Lz4Codec,com.hadoop.compression.lzo.LzoCodec,com.hadoop.compression.lzo.LzopCodec</value>
-  </property>
-  <property>
-      <name>io.compression.codec.lzo.class</name>
-      <value>com.hadoop.compression.lzo.LzoCodec</value>
-  </property>
-```
-- 若希望mapreduce的中间也被压缩，修改配置文件mapred-site.xml:
-```
-<property>
-  <name>mapreduce.map.output.compress</name>
-  <value>true</value>
-</property>
-<property>
-  <name>mapred.map.output.compress.codec</name>
-  <value>org.apache.hadoop.io.compress.LzoCodec</value>
-</property>
-<property>
-     <name>mapred.child.env</name>
-     <value>LD_LIBRARY_PATH=/opt/cloudera/parcels/CDH/lib/hadoop/</value>
-</property>
-```
 
+### 安装hadoop-lzo
+若使用CDH的话，按照如下步骤操作：
+
+1. 在 Administation --> Settings --> Parcels 页面中，对于`Remote Parcel Repository URLs`，添加url：http://archive-primary.cloudera.com/gplextras/parcels/latest/。保存。
+2. 在 Hosts --> Parcels --> Downloadable 页面中，下载HADOOP_LZO，然后分配并激活。
+
+配置
+===
+### 若使用CDH
+
+- 修改hdfs中`io.compression.codecs`的属性值，添加`com.hadoop.compression.lzo.LzopCodec`
+- 修改Yarn中`mapreduce.application.classpath`的属性值，添加`/opt/cloudera/parcels/HADOOP_LZO/lib/hadoop/lib/*`
+- 修改Yarn中`mapreduce.admin.user.env`的属性值，添加`/opt/cloudera/parcels/HADOOP_LZO/lib/hadoop/lib/native`
+
+若希望map的输出结果也被压缩，还需要修改Yarn中`mapreduce.map.output.compress`属性值为ture，并将`mapreduce.map.output.compress.codec`属性值改为`org.apache.hadoop.io.compress.LzoCodec`。若没有修改的话，也可在代码中设置。
+
+修改完毕后保存并deploy配置。
+
+
+### 非CDH
+非CDH可参考CDH的各参数修改，如下
+
+- core-site.xml中修改`io.compression.codecs`属性值，添加`com.hadoop.compression.lzo.LzopCodec`
+- 修改hadoop-env.sh，添加lzo库的路径
+- 对于map输出结果的压缩，参考CDH的修改。
 
 *LzoCodec与LzopCodec的比较*
 >
@@ -101,7 +78,7 @@ export PATH=$PATH:$MAVEN_HOME/bin
 
 生成lzo索引文件
 ===
-lzop压缩文件然后上传到hdfs，执行如下命令可在本地压缩：
+若hdfs中只有lzo文件，还需要生成index文件。执行如下命令可在本地压缩：
 
 ```
 hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.LzoIndexer big_file.lzo
@@ -111,6 +88,65 @@ hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.LzoIndexer bi
 ```
 hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.DistributedLzoIndexer big_file.lzo
 ```
+
+MapReduce压缩文件
+===
+若需要Reudce结果为lzo，并添加索引。需要自己编写代码并生成jar包用来压缩文件。如下：
+```java
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.Job;
+import com.hadoop.compression.lzo.LzopCodec;
+import com.hadoop.compression.lzo.LzoIndexer;
+
+public class Compress {
+
+    public static void main(String[] args) throws Exception {
+
+        if (args.length != 2) {
+            System.out.println("Usage: hadoop jar compress-1.0-SNAPSHOT.jar Compress INPUT OUTPUT");
+            System.exit(-1);
+        }
+
+        Configuration conf = new Configuration();
+        conf.setBoolean("mapreduce.map.output.compress", true);
+        conf.setClass("mapreduce.map.output.compress.codec", LzopCodec.class, CompressionCodec.class);
+        Job job = Job.getInstance(conf, "compress_hdfs");
+        job.setJarByClass(Compress.class);
+
+        Path fileInput = new Path(args[0]);
+        Path fileOutput = new Path(args[1]);
+        FileInputFormat.addInputPath(job, fileInput);
+        FileOutputFormat.setOutputPath(job, fileOutput);
+        FileOutputFormat.setCompressOutput(job, true);
+        FileOutputFormat.setOutputCompressorClass(job, LzopCodec.class);
+
+        if(job.waitForCompletion(true)) {
+            LzoIndexer indexer = new LzoIndexer(conf);
+            indexer.index(fileOutput);
+        } else {
+            System.exit(1);
+        }
+    }
+}
+```
+
+执行`mvn clean install`打包后，运行包，可查看执行结果。压缩完数据后，可通过比较压缩前后数据行数来大致判断压缩过程中是否有数据丢失：
+```
+# 压缩前
+> hdfs dfs -cat /origin_file |wc -l
+
+# 压缩后
+> sum=0;for i in {0..15};do if [ $i -le 9 ];then t=0$i; else t=$i;fi; ((sum+=`hdfs dfs -text /compress_file/part-r-000$t.lzo|wc -l`));done; echo $sum
+```
+
+hive
+===
+
+压缩hive数据[todo]
 
 报错
 ===
@@ -126,10 +162,6 @@ hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.DistributedLz
 export LD_LIBRARY_PATH=/usr/local/lzo-2.09/lib
 ```
 
-MapReduce压缩文件
-===
-若在HDFS中已经存在的文件，要通过本地lzop压缩的话，还需要先下载文件，再压缩，再上传，显然低效烦琐，可以通过读取文件然后在Reduce阶段进行压缩。[todo]
-
 Reference
 ===
 - [Choosing a Data Compression Format](http://www.cloudera.com/content/www/en-us/documentation/enterprise/5-2-x/topics/admin_data_compression_performance.html)
@@ -137,3 +169,4 @@ Reference
 - [Snappy and Hadoop](http://blog.cloudera.com/blog/2011/09/snappy-and-hadoop/)
 - [Is Snappy splittable or not splittable](http://stackoverflow.com/questions/32382352/is-snappy-splittable-or-not-splittable)
 - [LZO vs Snappy vs LZF vs ZLIB, A comparison of compression algorithms for fat cells in HBase](http://blog.erdemagaoglu.com/post/4605524309/lzo-vs-snappy-vs-lzf-vs-zlib-a-comparison-of)
+- [How to Use Intermediate and Final Output Compression (MR1 & YARN)](https://datameer.zendesk.com/hc/en-us/articles/204258750-How-to-Use-Intermediate-and-Final-Output-Compression-MR1-YARN-)
