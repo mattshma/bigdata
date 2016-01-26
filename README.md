@@ -2,7 +2,7 @@
 About hadoop, spark etc.
 
 
-Passage List:
+Passages:
 
 - [压缩](hadoop/docs/hdfs/compression.md)
 
