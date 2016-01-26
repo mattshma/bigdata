@@ -1,9 +1,9 @@
 压缩
----
+===
 目前hadoop的压缩有gzip, lzo, snappy等，许多文章都有对这几种压缩的对比，此不赘述。从效率和可分块的角度来看，这里选择lzo做为压缩方式。
 
 安装
-===
+---
 
 ### 集群节点安装lzo
 在Yarn的各节点上安装lzo：`yum -y install lzo`。当然也可在[官网](http://www.oberhumer.com/opensource/lzo/download/)下载后编译安装:
@@ -49,7 +49,7 @@
 2. 在 Hosts --> Parcels --> Downloadable 页面中，下载HADOOP_LZO，然后分配并激活。
 
 配置
-===
+---
 ### 若使用CDH
 
 - 修改hdfs中`io.compression.codecs`的属性值，添加`com.hadoop.compression.lzo.LzopCodec`
@@ -77,7 +77,7 @@
 
 
 生成lzo索引文件
-===
+---
 若hdfs中只有lzo文件，还需要生成index文件。执行如下命令可在本地压缩：
 
 ```
@@ -90,7 +90,7 @@ hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.DistributedLz
 ```
 
 MapReduce压缩文件
-===
+---
 若需要Reudce结果为lzo，并添加索引。需要自己编写代码并生成jar包用来压缩文件。如下：
 ```java
 import org.apache.hadoop.conf.Configuration;
@@ -144,12 +144,12 @@ public class Compress {
 ```
 
 hive
-===
+---
 
 压缩hive数据[todo]
 
 报错
-===
+---
 当运行压缩时，报错如下：
 ```
 16/01/18 18:36:45 INFO lzo.GPLNativeCodeLoader: Loaded native gpl library from the embedded binaries
