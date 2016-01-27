@@ -50,35 +50,33 @@
 
 配置
 ---
-### 若使用CDH
+### CDH
 
 - 修改hdfs中`io.compression.codecs`的属性值，添加`com.hadoop.compression.lzo.LzopCodec`
 - 修改Yarn中`mapreduce.application.classpath`的属性值，添加`/opt/cloudera/parcels/HADOOP_LZO/lib/hadoop/lib/*`
 - 修改Yarn中`mapreduce.admin.user.env`的属性值，添加`/opt/cloudera/parcels/HADOOP_LZO/lib/hadoop/lib/native`
-
-若希望map的输出结果也被压缩，还需要修改Yarn中`mapreduce.map.output.compress`属性值为ture，并将`mapreduce.map.output.compress.codec`属性值改为`org.apache.hadoop.io.compress.LzoCodec`。若没有修改的话，也可在代码中设置。
+- 若希望所有数据都被压缩，配置Yarn中的`mapreduce.output.fileoutputformat.compress`属性值为true，`mapreduce.output.fileoutputformat.compress.codec`属性值为`org.apache.hadoop.io.compress.LzoCodec`，`mapreduce.output.fileoutputformat.compress.type`属性值为`BLOCK`
+- 若希望map的输出结果也被压缩，还需要修改Yarn中`mapreduce.map.output.compress`属性值为ture，并将`mapreduce.map.output.compress.codec`属性值改为`org.apache.hadoop.io.compress.LzoCodec`。若没有修改的话，也可在代码中设置。
 
 修改完毕后保存并deploy配置。
-
 
 ### 非CDH
 非CDH可参考CDH的各参数修改，如下
 
 - core-site.xml中修改`io.compression.codecs`属性值，添加`com.hadoop.compression.lzo.LzopCodec`
 - 修改hadoop-env.sh，添加lzo库的路径
-- 对于map输出结果的压缩，参考CDH的修改。
+- 对于map输出结果和最终结果的压缩，参考CDH的修改。
 
 *LzoCodec与LzopCodec的比较*
 >
 > LzoCodec 与 LzopCodec的区别如同Lzo与Lzop的区别，前者是一种快速的压缩库，后者在前者的基础上添加了额外的文件头。
 > 
-> 若使用LzoCodec作为Reduce输出，则输出文件的扩展名为`.lzo_deflate`，其无法作为MapReduce的的输入，`DistributedLzoIndexer`也无法为其创建索引；若使用LzopCodec作为Reduce输出，则输出文件的扩展名为 `.lzo`。所以一般而言，map输出的中间结果使用LzoCodec，而reduce输出使用LzopCodec。可参考[What's the difference between the LzoCodec and the LzopCodec in Hadoop-LZO?](https://www.quora.com/Whats-the-difference-between-the-LzoCodec-and-the-LzopCodec-in-Hadoop-LZO)。
+> 若使用LzoCodec作为Reduce输出，则输出文件的扩展名为`.lzo_deflate`，其无法作为MapReduce的的输入，`DistributedLzoIndexer`也无法为其创建索引；若使用LzopCodec作为Reduce输出，则输出文件的扩展名为 `.lzo`。可参考[What's the difference between the LzoCodec and the LzopCodec in Hadoop-LZO?](https://www.quora.com/Whats-the-difference-between-the-LzoCodec-and-the-LzopCodec-in-Hadoop-LZO)。
 >
-
 
 生成lzo索引文件
 ---
-若hdfs中只有lzo文件，还需要生成index文件。执行如下命令可在本地压缩：
+若hdfs中已有lzo文件，还需要生成index文件。执行如下命令可在本地压缩：
 
 ```
 hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.LzoIndexer big_file.lzo
@@ -92,6 +90,7 @@ hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.DistributedLz
 MapReduce压缩文件
 ---
 若需要Reudce结果为lzo，并添加索引。需要自己编写代码并生成jar包用来压缩文件。如下：
+
 ```java
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -143,6 +142,10 @@ public class Compress {
 > sum=0;for i in {0..15};do if [ $i -le 9 ];then t=0$i; else t=$i;fi; ((sum+=`hdfs dfs -text /compress_file/part-r-000$t.lzo|wc -l`));done; echo $sum
 ```
 
+解压
+---
+使用压缩后，即使不指定inputformat，Mapreduce也能根据文件后缀来读取文件，但对于不能分区的压缩方式，整个文件将只能由一个map来处理。相关内容可参考[Hadoop2 Mapreduce输入输出压缩](http://www.winseliu.com/blog/2014/09/01/hadoop2-mapreduce-compress/)。若使用lzo生成索引后，文件能支持分区，但inputformat必须指定为`LzoTextInputFormat`：`job.setInputFormatClass(LzoTextInputFormat.class);`，以防将索引文件也当成输入文件。
+
 hive
 ---
 
@@ -170,3 +173,4 @@ Reference
 - [Is Snappy splittable or not splittable](http://stackoverflow.com/questions/32382352/is-snappy-splittable-or-not-splittable)
 - [LZO vs Snappy vs LZF vs ZLIB, A comparison of compression algorithms for fat cells in HBase](http://blog.erdemagaoglu.com/post/4605524309/lzo-vs-snappy-vs-lzf-vs-zlib-a-comparison-of)
 - [How to Use Intermediate and Final Output Compression (MR1 & YARN)](https://datameer.zendesk.com/hc/en-us/articles/204258750-How-to-Use-Intermediate-and-Final-Output-Compression-MR1-YARN-)
+- [Hadoop at Twitter (part 1): Splittable LZO Compression](http://blog.cloudera.com/blog/2009/11/hadoop-at-twitter-part-1-splittable-lzo-compression/)
