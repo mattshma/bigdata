@@ -45,7 +45,7 @@
 ### 安装hadoop-lzo
 若使用CDH的话，按照如下步骤操作：
 
-1. 在 Administation --> Settings --> Parcels 页面中，对于`Remote Parcel Repository URLs`，添加url：http://archive-primary.cloudera.com/gplextras/parcels/latest/。 保存。
+1. 在 Administation --> Settings --> Parcels 页面中，对于`Remote Parcel Repository URLs`，添加url：http://archive-primary.cloudera.com/gplextras/parcels/latest/ 。保存。
 2. 在 Hosts --> Parcels --> Downloadable 页面中，下载HADOOP_LZO，然后分配并激活。
 
 配置
@@ -89,7 +89,7 @@ hadoop jar /path/to/your/hadoop-lzo.jar com.hadoop.compression.lzo.DistributedLz
 
 MapReduce压缩文件
 ---
-若需要Reudce结果为lzo，并添加索引。需要自己编写代码并生成jar包用来压缩文件。如下：
+若需要Reduce结果为lzo，并添加索引。需要自己编写代码并生成jar包用来压缩文件。如下：
 
 ```java
 import org.apache.hadoop.conf.Configuration;
@@ -148,12 +148,14 @@ public class Compress {
 
 hive
 ---
+在测试hive过程，直接load lzo文件和将lzo文件拷贝到hdfs，hive都能正常读取压缩文件。hive表结构没有修改。
 
-压缩hive数据[todo]
-
-报错
+问题
 ---
+- Failed to load/initialize native-lzo library
+
 当运行压缩时，报错如下：
+
 ```
 16/01/18 18:36:45 INFO lzo.GPLNativeCodeLoader: Loaded native gpl library from the embedded binaries
 16/01/18 18:36:45 WARN lzo.LzoCompressor: java.lang.UnsatisfiedLinkError: Cannot load liblzo2.so.2 (liblzo2.so.2: cannot open shared object file: No such file or directory)!
@@ -164,6 +166,11 @@ hive
 ```
 export LD_LIBRARY_PATH=/usr/local/lzo-2.09/lib
 ```
+
+- [todo]压缩后mr数据和压缩前不太一致
+
+在压缩后，除了比较文件行数外，还写了个wordcount来对比文件，但出乎意料的是压缩后的数据wordcount出来的结果比压缩前多了些无用数据。
+
 
 Reference
 ===
