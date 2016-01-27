@@ -45,7 +45,7 @@
 ### 安装hadoop-lzo
 若使用CDH的话，按照如下步骤操作：
 
-1. 在 Administation --> Settings --> Parcels 页面中，对于`Remote Parcel Repository URLs`，添加url：http://archive-primary.cloudera.com/gplextras/parcels/latest/。保存。
+1. 在 Administation --> Settings --> Parcels 页面中，对于`Remote Parcel Repository URLs`，添加url：http://archive-primary.cloudera.com/gplextras/parcels/latest/。 保存。
 2. 在 Hosts --> Parcels --> Downloadable 页面中，下载HADOOP_LZO，然后分配并激活。
 
 配置
