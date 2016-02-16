@@ -31,40 +31,40 @@ Available commands:
 
 几个比较通用的选项如下：
 
-- --connect <jdbc-uri>    
+- --connect      
 通过jdbc指定关系型数据库的地址。
 
-- --direct      
+- --direct        
 除了通过jdbc导入导出数据外，sqoop还支持使用关系型数据库自身提供的导入导出工具这种direct模式，如mysql中的mysqldump。direct模式需要关系型数据库相关命令如`mysqldump`, `mysqlimport`在运行sqoop命令的用户的path中。一般通过direct模式的效率都比jdbc高。但sqoop模式可能会不支持部分属性，如mysql中direct模式不支持`BLOB`, `CLOB`, `LONGVARBINARY`这些类型字段的导出，且不支持视图。
-
-- --username <username>    
+ 
+- --username    
 连接关系型数据库的用户名。
 
-- --password <password>    
+- --password     
 连接关系型数据库的密码。
 
-- --table <table-name>       
+- --table          
 关系型数据库的目标表。
 
-- -m,--num-mappers <n>        
+- -m,--num-mappers            
 并行执行的任务数，当数据量比较大时使用。
 
-- --target-dir <dir>   
+- --target-dir      
 hdfs中的目标目录。
 
-- --warehouse-dir <dir>   
+- --warehouse-dir       
 hdfs中目标目录的父目录。
 
-- --where <where clause>   
+- --where      
 根据where条件判断哪些记录可以被导入到hdfs，如`--where "id>400"`。
 
-- --columns <col,col,col...>   
+- --columns        
 导入哪些列到hdfs中。sqoop根据其生成的语句为`SELECT <column list> FROM <table name>`。
 
-- -z,--compress   
+- -z,--compress      
 开启压缩。
 
-- --compression-codec <codec>   
+- --compression-codec       
 压缩使用的编码解码器。如`--compression-codec "com.hadoop.compression.lzo.LzopCodec"`。 
 
 
