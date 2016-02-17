@@ -1,6 +1,5 @@
 # bigdata
-About hadoop, spark etc.
-
+大数据及Java，scala相关的一些笔记。
 
 Passages:
 
