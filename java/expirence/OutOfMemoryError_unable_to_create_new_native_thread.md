@@ -17,7 +17,7 @@ java.lang.OutOfMemoryError: unable to create new native thread
 (MaxProcessMemory - JVMMemory - ReservedOsMemory) / (ThreadStackSize) = Number of threads
 ```
 
-看情况是要减少JVM的heap大小或者减少ThreadStackSize(`-Xss`)大小。
+看情况是要减少JVM的heap大小或者减少ThreadStackSize(`-Xss`)大小。通过调整`-Xss256k`后重启服务，问题解决。
 
 ### 疑问
 1. JVM thread和native thread的关系，ThreadStackSize设置大小对这两者的影响。
