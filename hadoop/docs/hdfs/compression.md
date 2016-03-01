@@ -1,6 +1,6 @@
 压缩
 ===
-目前hadoop的压缩有gzip, lzo, snappy等，许多文章都有对这几种压缩的对比，此不赘述。从效率和可分块的角度来看，这里选择lzo做为压缩方式。
+目前hadoop的压缩有gzip, lzo, snappy等，许多文章都有对这几种压缩的对比，此不赘述。从效率和可分块的角度来看，这里选择lzo做为压缩方式。文件压缩后，Hadoop会根据文件扩展名来选取相应的codec，codec从配置文件的`io.compression.codec`中查找，MapReduce在读取文件时根据codec会自动解压文件。
 
 安装
 ---

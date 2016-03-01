@@ -85,6 +85,27 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 - 若导入到hive中的表名与mysql中表名不同，可通过`--hive-table`来指定导入到hive的表名。`--hive-table`可指定为`database.table`的形式。
 - Sqoop 默认地导入NULL为 null 字符串，这样当处理NULL类型时，若条件为`IS NOT NULL`，则查询结果会不正确。hive 使用`\N`去标识空值（NULL），另外由于sqoop会根据这些参数来生成代码，所以`\N`需转义为`\\N`，即`sqoop import  ... --null-string '\\N' --null-non-string '\\N'`。
 
+## 一次性导入多个表
+若要导入的多个表，可使用`sqoop import-all-tables`，`import-all-tables`与`import`命令基本相同。其导入多个表到HDFS/hive中，生成表与导入表是1对1的关系，所以不能指定`--hive-table`，否则只能导入第一个表；若不需要导入某些表，可使用`--exclude-tables`来排除这些表，表名以`,`分割，`,`前后不能有空格，否则报错。用法如`--exclude-tables a,b,c`。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 参考
 - [Sqoop User Guide](https://sqoop.apache.org/docs/1.4.6/SqoopUserGuide.html)
