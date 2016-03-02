@@ -49,24 +49,14 @@ Available commands:
 - -m,--num-mappers            
 并行执行的任务数，当数据量比较大时使用。
 
-- --target-dir      
-hdfs中的目标目录。
-
 - --warehouse-dir       
 hdfs中目标目录的父目录。
-
-- --where      
-根据where条件判断哪些记录可以被导入到hdfs，如`--where "id>400"`。
-
-- --columns        
-导入哪些列到hdfs中。sqoop根据其生成的语句为`SELECT <column list> FROM <table name>`。
 
 - -z,--compress      
 开启压缩。
 
 - --compression-codec       
 压缩使用的编码解码器。如`--compression-codec "com.hadoop.compression.lzo.LzopCodec"`。 
-
 
 ## Mysql数据导入Hive
 
@@ -85,27 +75,23 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 - 若导入到hive中的表名与mysql中表名不同，可通过`--hive-table`来指定导入到hive的表名。`--hive-table`可指定为`database.table`的形式。
 - Sqoop 默认地导入NULL为 null 字符串，这样当处理NULL类型时，若条件为`IS NOT NULL`，则查询结果会不正确。hive 使用`\N`去标识空值（NULL），另外由于sqoop会根据这些参数来生成代码，所以`\N`需转义为`\\N`，即`sqoop import  ... --null-string '\\N' --null-non-string '\\N'`。
 
-## 一次性导入多个表
-若要导入的多个表，可使用`sqoop import-all-tables`，`import-all-tables`与`import`命令基本相同。其导入多个表到HDFS/hive中，生成表与导入表是1对1的关系，所以不能指定`--hive-table`，否则只能导入第一个表；若不需要导入某些表，可使用`--exclude-tables`来排除这些表，表名以`,`分割，`,`前后不能有空格，否则报错。用法如`--exclude-tables a,b,c`。
+## 多个表导入Hive
+`sqoop-import`支持增量导表，若要将多个表结构相同的表导入到Hive，可使用`--append`导入。`--append`还适用分次导表的情况，如第一次根据`where`条件导入表A的一部分数据后，第二次再根据`where`条件`--append`数据到hive表中。
 
+## 库中所有表导入Hive
+若要导入某一数据库中的所有表，可使用`sqoop import-all-tables`，`import-all-tables`与`import`命令基本相同。其导入多个表到HDFS/hive中，生成表与导入表是1对1的关系，所以不能指定`--hive-table`，否则只能导入第一个表；若不需要导入某些表，可使用`--exclude-tables`来排除这些表，表名以`,`分割，`,`前后不能有空格，否则报错。用法如`--exclude-tables a,b,c`。
 
+## 多个库导入Hive
+若关系型数据库被分为多个库，现需要导入到Hive，可通过Hive分区的形式导入多个库：每个库对应一个分区，每个分区内通过`sqoop import-all-tables`或`sqoop import --append`导入。
 
+## 根据查询条件导入数据
+几个参数如下：
 
+- --where      
+根据where条件判断哪些记录可以被导入到hdfs，如`--where "id>400"`。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- --columns        
+导入哪些列到hdfs中。sqoop根据其生成的语句为`SELECT <column list> FROM <table name>`。
 
 ## 参考
 - [Sqoop User Guide](https://sqoop.apache.org/docs/1.4.6/SqoopUserGuide.html)
