@@ -79,7 +79,7 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 `sqoop-import`支持增量导表，若要将多个表结构相同的表导入到Hive，可使用`--append`导入。`--append`还适用分次导表的情况，如第一次根据`where`条件导入表A的一部分数据后，第二次再根据`where`条件`--append`数据到hive表中。
 
 ## 库中所有表导入Hive
-若要导入某一数据库中的所有表，可使用`sqoop import-all-tables`，`import-all-tables`与`import`命令基本相同。其导入多个表到HDFS/hive中，生成表与导入表是1对1的关系，所以不能指定`--hive-table`，否则只能导入第一个表；若不需要导入某些表，可使用`--exclude-tables`来排除这些表，表名以`,`分割，`,`前后不能有空格，否则报错。用法如`--exclude-tables a,b,c`。
+若要导入某一数据库中的所有表，可使用`sqoop import-all-tables`，`import-all-tables`与`import`命令基本相同。其导入多个表到HDFS/hive中，生成表与导入表是1对1的关系，所以不能指定`--hive-table`，否则只能导入第一个表；若不需要导入某些表，可使用`--exclude-tables`来排除这些表，表名以`,`分割，`,`前后不能有空格，否则报错。用法如`--exclude-tables a,b,c`。 `import-all-tables`不支持`--append`参数，因此若需要将多个关系型数据库中的表导入Hive中的某个表，需要使用`sqoop import`。
 
 ## 多个库导入Hive
 若关系型数据库被分为多个库，现需要导入到Hive，可通过Hive分区的形式导入多个库：每个库对应一个分区，每个分区内通过`sqoop import-all-tables`或`sqoop import --append`导入。
@@ -92,6 +92,10 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 
 - --columns        
 导入哪些列到hdfs中。sqoop根据其生成的语句为`SELECT <column list> FROM <table name>`。
+
+## 压缩
+若需要使用压缩需指定`--compress`或`-z`和`--compression-codec`，如使用Snappy压缩：`--compression-codec org.apache.hadoop.io.compress.SnappyCodec`。
+
 
 ## 参考
 - [Sqoop User Guide](https://sqoop.apache.org/docs/1.4.6/SqoopUserGuide.html)
