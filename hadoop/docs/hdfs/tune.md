@@ -12,6 +12,8 @@ Hadoop集群搭建完成后，一般都要调整部分参数，以更好的利�
 ### MR2
 除这些守护进程外，还需给任务调整内存分配，在MR2中，分别使用`mapreduce.map.memory.mb`，`mapreduce.reduce.memory.mb`来限制map任务和reduce任务使用内存的大小，若任务使用内存使用超过`mapreduce.map/reduce.memory.mb`内存大小，会产生"Killing container"的问题。另外，map和reduce任务运行的JVM也可优化。若分配给任务运行的JVM内存太小，可能会产生"OutOfMemoryError"问题，若分配给其内存太大，可能会造成资源浪费。分配给每个任务的JVM大小由`mapred.child.java.opts`设置，默认为200MB，由于不大可能所有任务都使用同等大小jvm，因此可在客户端设置该属性(`-Xmx`)并覆盖配置文件中设置的值。在MR2版本中，若指定`mapreduce.map.java.opts`和`mapreduce.reduce.java.opts`，会覆盖`mapred.child.java.opts`设置的值。`mapreduce.map/reduce.memory.mb`限制任务使用内存的总大小，`mapreduce.map/reduce.java.opts`限制任务JVM使用内存大小，一般设置后者为前者的75%~80%左右，剩余内存留给JAVA代码。
 
+一般而言，推荐`mapreduce.reduce.memory.mb`的大小为`mapreduce.map.memory.mb`的2倍。
+
 ### YARN
 
 通过`yarn.nodemanager.resource.memory-mb`可指定每台nodemanager可分配的内存大小，如对于一台64G的nodemanager而言，若保留8G给操作系统及其他进程用，可将剩余的56G内存分给nodemanager用。
@@ -66,12 +68,9 @@ block是物理块，split是逻辑块。一个split对应一个map输入。split
 
 配置Unix Domain Socket需要`libhadoop.so`，可通过`hadoop checknative`查看其是否已安装。short-circuit相关参数为`dfs.client.read.shortcircuit`和`dfs.domain.socket.path`。
 
-## spark
-
-
-
 
 ## Reference
 - [MapReduce YARN Memory Parameters](https://support.pivotal.io/hc/en-us/articles/201462036-MapReduce-YARN-Memory-Parameters)
 - [mapred-default.xml](https://hadoop.apache.org/docs/stable/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml)
 - [HDFS Short-Circuit Local Reads](https://hadoop.apache.org/docs/r2.7.1/hadoop-project-dist/hadoop-hdfs/ShortCircuitLocalReads.html)
+- [Tuning the Cluster for MapReduce v2 (YARN)](http://www.cloudera.com/documentation/enterprise/latest/topics/cdh_ig_yarn_tuning.html)
