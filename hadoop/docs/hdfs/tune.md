@@ -7,7 +7,7 @@ Hadoop集群搭建完成后，一般都要调整部分参数，以更好的利�
 ## 内存
 以下从3方面说下内存的调整。
 ### 进程
-默认情况下，Hadoop为namendoe, datanode, resourcemanager, nodemanager等进程分配的内存为1G。namenode需要的内存可大致计算得到：namenode维护文件系统中每个数据块的引用，而每个文件系统含有的数据块数，文件名长度等不同，所以各集群的namenode对内存的需求也不同。一般保守估计namenode需要为每1百万个数据块分配1G内存空间。以100个节点的集群算，每节点有12*4T的磁盘空间，数据块为64MB，复本为3，则约有100*12*4*1 000 000 MB/(64MB*3)=2500万个数据块，考虑到磁盘基本不会用完，所以该集群需要分配约20G内存给namenode。
+默认情况下，Hadoop为namendoe, datanode, resourcemanager, nodemanager等进程分配的内存为1G。namenode需要的内存可大致计算得到：namenode维护文件系统中每个数据块的引用，而每个文件系统含有的数据块数，文件名长度等不同，所以各集群的namenode对内存的需求也不同。一般保守估计namenode需要为每1百万个数据块分配1G内存空间。以100个节点的集群算，每节点有12 * 4T的磁盘空间，数据块为64MB，复本为3，则约有100 * 12 * 4 * 1 000 000 MB/(64MB * 3)=2500万个数据块，考虑到磁盘基本不会用完，所以该集群需要分配约20G内存给namenode。
  
 ### MR2
 除这些守护进程外，还需给任务调整内存分配，在MR2中，分别使用`mapreduce.map.memory.mb`，`mapreduce.reduce.memory.mb`来限制map任务和reduce任务使用内存的大小，若任务使用内存使用超过`mapreduce.map/reduce.memory.mb`内存大小，会产生"Killing container"的问题。另外，map和reduce任务运行的JVM也可优化。若分配给任务运行的JVM内存太小，可能会产生"OutOfMemoryError"问题，若分配给其内存太大，可能会造成资源浪费。分配给每个任务的JVM大小由`mapred.child.java.opts`设置，默认为200MB，由于不大可能所有任务都使用同等大小jvm，因此可在客户端设置该属性(`-Xmx`)并覆盖配置文件中设置的值。在MR2版本中，若指定`mapreduce.map.java.opts`和`mapreduce.reduce.java.opts`，会覆盖`mapred.child.java.opts`设置的值。`mapreduce.map/reduce.memory.mb`限制任务使用内存的总大小，`mapreduce.map/reduce.java.opts`限制任务JVM使用内存大小，一般设置后者为前者的75%~80%左右，剩余内存留给JAVA代码。
