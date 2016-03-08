@@ -34,7 +34,18 @@ vcore的调整基本同内存。nodemanager能分配的总的vcore数为`yarn.no
 
 ## scheduler
 
-一般情况下，各任务根据scheduler的设置运行在相应的queue中，因此，queue的设置也相当重要。这部分的设置和业务比较紧密，因此这里暂不赘述。
+一般情况下，各任务根据scheduler的设置运行在相应的queue中，因此，queue的设置也相当重要。[CDH不支持Capacity Scheduler](http://www.cloudera.com/documentation/cdh/5-1-x/CDH5-Installation-Guide/cdh5ig_mapreduce_to_yarn_migrate.html#concept_nqs_pmy_xl_unique_3)。Fair Scheduler有几个参数如下：
+
+- `yarn.scheduler.fair.preemption`    
+开启抢占后，当一个pool的最小资源请求无法满足时，会从其他pool抢占部分资源。
+
+- `yarn.scheduler.fair.sizebasedweight`    
+按每个app的size大小分配资源。默认关闭，即给所有app分配相同资源。
+
+- `yarn.scheduler.fair.assignmultiple`       
+允许一个heartbeat分配多个container。当小任务很多时，开启这个参数能提高集群吞吐量。
+ 
+这部分的设置和业务比较紧密，因此这里暂不赘述。
 
 ## shuffle
 shuffle做为MR奇迹发生的地方，优化好的话能很大程序提高job的运行速度。shuffle的具体过程可参考[这里](http://langyu.iteye.com/blog/992916)。总得来说应该多给shuffle分配资源，但同时也应确保map和reduce运行正常。优化分为两方面：1)减少磁盘读写次数；2)减少磁盘读写量。
