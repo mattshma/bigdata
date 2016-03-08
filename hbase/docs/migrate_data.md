@@ -28,7 +28,7 @@ Usage: CopyTable [general options] [--starttime=X] [--endtime=Y] [--new.name=NEW
 
 若是拷贝到其它集群，指定`--peer.adr`。
 
-因为使用的是读路径和写路径，所以这种方式会引起读写压力。同时会造成切分Region。当然右预先分区来避免过度的切分region。
+因为使用的是读路径和写路径，所以这种方式会引起读写压力。同时会造成切分Region。当然可通过预分区来避免过度的切分region。在CDH5中，大部分场景推荐用snapshots来代替copytable。
 
 ### 从CDH4拷贝数据到CDH5
 
@@ -72,7 +72,7 @@ hadoop distcp -p -update -skipcrccheck webhdfs://cdh4-namenode:http-port/hbase h
 
 上述两种方法各有优缺点。前一种方法比较慢，当数据量大时，会耗时很久，后一种方法仅在目标集群为空时使用。
 
-### 使用快照
+### snapshots
 快照保留的集群某个时间点的快照，同CopyTable/Export等相比，snapshot操作的仅仅是metadata，因此速度非常快。如下。
 
 ```
@@ -82,6 +82,8 @@ hadoop distcp -p -update -skipcrccheck webhdfs://cdh4-namenode:http-port/hbase h
 # 使用clone_snapshot将某个表拷贝到同一集群中的其它表中
 > clone_snapshot 'TestTableSnapshot', 'NewTestTable'  
 ```
+
+一旦snapshot生成，snapshot中的数据将不会被删除，即使通过API显示删除也不行。
 
 ### 使用BulkLoad
 HBase使用HFile格式存储文件，因此可以用程序将数据写成HFile格式，然后批量导入到HBase中。这种方式绕过写路径，有如下好处：
@@ -94,8 +96,8 @@ HBase使用HFile格式存储文件，因此可以用程序将数据写成HFile�
 
 - 从源数据外取出数据。如mysql数据库中使用`mysqldump`命令取出数据。如果数据为TSV或CSV格式，可跳过这步。
 - 将第一步产生的数据处理为HFile格式。
-- 每个region产生一个HFile文件
-- 将HFile文件导入到HBase中
+- 每个region产生一个HFile文件。
+- 借助[completebulkload](http://hbase.apache.org/book.html#completebulkload)将HFile文件导入到HBase中。
 
 ### 使用复制
 
@@ -125,3 +127,4 @@ HADOOP_USER_NAME=hbase hbase -Dhbase.import.version=0.98 org.apache.hadoop.hbase
 - [distcp](https://hadoop.apache.org/docs/r1.0.4/cn/distcp.html)
 - [Online Apache HBase Backups with CopyTable](http://blog.cloudera.com/blog/2012/06/online-hbase-backups-with-copytable-2/)
 - [Approaches to Backup and Disaster Recovery in HBase](http://blog.cloudera.com/blog/2013/11/approaches-to-backup-and-disaster-recovery-in-hbase/)
+- [HBase replication](http://www.cloudera.com/documentation/enterprise/latest/topics/cdh_bdr_hbase_replication.html)
