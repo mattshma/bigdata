@@ -1,13 +1,14 @@
 推荐配置
 ---
-### ZooKeeper Configuration
+## ZooKeeper Configuration
 - zookeeper.session.timeout 
    暂时不优化该项
 - Number of ZooKeeper Instances
 
-### HDFS Configurations
+## RPC Handler
 
-
+- hbase.regionserver.handler.count
+设置每个Region Server上的RPC handler数量。
 
 参考
 ---
