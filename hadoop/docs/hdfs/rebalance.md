@@ -74,7 +74,7 @@ rebalance server 向namenode请求每个源节点的部分block map，请求的�
 rebalance 时 datanode 上的一些注意项
 ---
 
-每个datenode用于rebalance的带宽都是有限制的，默认是5MB/s。每个 datanode 并发的数据传输个数（包括发送和接收）不能超过5个，即在最坏的情况下，每个数据传输的带宽限制为1MB/s。 
+每个datenode用于rebalance的带宽都是有限制的，默认是5MB/s。每个 datanode 并发的数据传输个数（包括发送和接收）不能超过5个，即在最坏的情况下，每个数据传输的带宽限制为1MB/s。可通过`dfs.balance.bandwidthPerSec, dfs.datanode.balance.bandwidthPerSec`进行设置，或者通过`hdfs dfsadmin -setBalancerBandwidth NewBandWidth`设置。
 
 Reference
 ---
