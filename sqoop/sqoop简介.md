@@ -72,7 +72,7 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 
 - 数据导入hive后，字段间分隔符默认为`\01`。
 - 若不指定`--warehouse-dir`或`--target-dir`，数据会导入到该用户目录下。
-- 若导入到hive中的表名与mysql中表名不同，可通过`--hive-table`来指定导入到hive的表名。`--hive-table`可指定为`database.table`的形式。
+- 若导入到hive中的表名与mysql中表名不同，可通过`--hive-table`来指定导入到hive的表名，通过`--hive-database`指定库名。`--hive-table`可指定为`database.table`的形式。
 - Sqoop 默认地导入NULL为 null 字符串，这样当处理NULL类型时，若条件为`IS NOT NULL`，则查询结果会不正确。hive 使用`\N`去标识空值（NULL），另外由于sqoop会根据这些参数来生成代码，所以`\N`需转义为`\\N`，即`sqoop import  ... --null-string '\\N' --null-non-string '\\N'`。
 
 ## 多个表导入Hive
@@ -96,6 +96,26 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 ## 压缩
 若需要使用压缩需指定`--compress`或`-z`和`--compression-codec`，如使用Snappy压缩：`--compression-codec org.apache.hadoop.io.compress.SnappyCodec`。
 
+## 并行导入
+
+为加快导入速度，一般会指定多个mapper，sqoop根据主键id生成sql语句`select max(id) as max, select min(id) as min from table [where 如果指定了where子句];`来得出上下限，根据得出的上下限及指定的mapper数来拆分任务。如max id为100， min id为0，指定的mapper数为2，则会分成如下两个sql执行：
+
+```
+select * from table where 0 <= id < 50;
+select * from table where 50 <= id < 100;
+```
+
+但是，若某个表没有主键，又指定多个mapper运行，会报错：`Error during import: No primary key could be found for table xx_db.yy_table. Please specify one with --split-by or perform a sequential import with '-m 1'.`
+
+### --split-by
+对于上述情况，可通过`--split-by`来指定其他列做为split列。通过比较`select min(<split-by>), max(<split-by>) from <table name>`选取一个选择性高的列。但若min和max不是最优的判断方法呢？
+
+### --boundary-query 
+若`min(<split-by>)`, `max(<split-by>)`不是最佳的判断，可通过`--boundary-query`来指定返回两个整数类型的新查询方法，如`--boundary-query 'select id,no from t where id = 3'`。
+
+当然，也可以通过指定多个条件运行多个sqoop程序来加快导入，如`sqoop import ... --where "id>10000"`和`sqoop import ... --where "id < 10000"`等。
+
 
 ## 参考
 - [Sqoop User Guide](https://sqoop.apache.org/docs/1.4.6/SqoopUserGuide.html)
+- [what are the following commands in sqoop?](http://stackoverflow.com/questions/17923420/what-are-the-following-commands-in-sqoop)
