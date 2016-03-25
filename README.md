@@ -3,5 +3,5 @@
 
 Passages:
 
-- [压缩](hadoop/docs/hdfs/compression.md)
+- [压缩](hadoop/docs/hdfs/压缩.md)
 - [集群调优](hadoop/docs/hdfs/tune.md)
