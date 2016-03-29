@@ -74,6 +74,8 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 - 若不指定`--warehouse-dir`或`--target-dir`，数据会导入到该用户目录下。
 - 若导入到hive中的表名与mysql中表名不同，可通过`--hive-table`来指定导入到hive的表名，通过`--hive-database`指定库名。`--hive-table`可指定为`database.table`的形式。
 - Sqoop 默认地导入NULL为 null 字符串，这样当处理NULL类型时，若条件为`IS NOT NULL`，则查询结果会不正确。hive 使用`\N`去标识空值（NULL），另外由于sqoop会根据这些参数来生成代码，所以`\N`需转义为`\\N`，即`sqoop import  ... --null-string '\\N' --null-non-string '\\N'`。
+- 若字段中有`\n`、`\r`和`\01`，需使用`--hive-drop-import-delims`过滤，`--hive-drop-import-delims`会丢弃这些字符，或通过`--hive-delims-replacement`指定符号来代替。对于大量文本，一般需要指定这个属性，否则可能出现hive会比mysql多很多行的情况。
+
 
 ## 多个表导入Hive
 `sqoop-import`支持增量导表，若要将多个表结构相同的表导入到Hive，可使用`--append`导入。`--append`还适用分次导表的情况，如第一次根据`where`条件导入表A的一部分数据后，第二次再根据`where`条件`--append`数据到hive表中。
