@@ -76,6 +76,70 @@ rebalance 时 datanode 上的一些注意项
 
 每个datenode用于rebalance的带宽都是有限制的，默认是5MB/s。每个 datanode 并发的数据传输个数（包括发送和接收）不能超过5个，即在最坏的情况下，每个数据传输的带宽限制为1MB/s。可通过`dfs.balance.bandwidthPerSec, dfs.datanode.balance.bandwidthPerSec`进行设置，或者通过`hdfs dfsadmin -setBalancerBandwidth NewBandWidth`设置。
 
+提高rebalancer速度
+---
+
+在实际工作中，对于几T或更大的数据，若使用默认的rebalancer做数据均衡，速度太慢了，本来以为是[HDFS-6621](https://issues.apache.org/jira/browse/HDFS-6621)这个问题导致的，但[CDH5.2.0之后的版本都修复这个问题了](https://community.cloudera.com/t5/Cloudera-Manager-Installation/hdfs-balancer-slow-to-move-data-around-in-cdh-5/td-p/17226)。但在CDH5.5.2，不管如何设置bandwidth，rebalancer还是那么慢。没办法，看源码。
+
+查看[DataXceiverServer.java](https://github.com/apache/hadoop/blob/02a250db9f4bc54436cd9900a084215e5e3c8dae/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataXceiverServer.java#L67)：
+```
+   /**Constructor
+    * 
+    * @param bandwidth Total amount of bandwidth can be used for balancing 
+    */
+    private BlockBalanceThrottler(long bandwidth, int maxThreads) {
+      super(bandwidth);
+      this.maxThreads.set(maxThreads);
+      LOG.info("Balancing bandwidth is " + bandwidth + " bytes/s");
+      LOG.info("Number threads for balancing is " + maxThreads);
+    }
+
+   /** Check if the block move can start. 
+    * 
+    * Return true if the thread quota is not exceeded and 
+    * the counter is incremented; False otherwise.
+    */
+    synchronized boolean acquire() {
+      if (numThreads >= maxThreads.get()) {
+        return false;
+      }
+      numThreads++;
+      return true;
+    }
+```
+和
+```
+  DataXceiverServer(PeerServer peerServer, Configuration conf,
+      DataNode datanode) {
+    this.peerServer = peerServer;
+    this.datanode = datanode;
+    
+    //设置DataNode中DataXceiver的最大数目maxXceiverCount，读取参数dfs.datanode.max.transfer.threads，默认值为4096
+    this.maxXceiverCount = 
+      conf.getInt(DFSConfigKeys.DFS_DATANODE_MAX_RECEIVER_THREADS_KEY,
+                  DFSConfigKeys.DFS_DATANODE_MAX_RECEIVER_THREADS_DEFAULT);
+    
+    this.estimateBlockSize = conf.getLongBytes(DFSConfigKeys.DFS_BLOCK_SIZE_KEY,
+        DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
+     
+    //set up parameter for cluster balancing
+    //设置集群balancer
+    //bandwidth的值读取参数dfs.datanode.balance.bandwidthPerSec，默认值为1024*1024bps（即1Mbps） 
+    //最大线程数读取参数dfs.datanode.balance.max.concurrent.moves，默认值为5
+    this.balanceThrottler = new BlockBalanceThrottler(
+        conf.getLongBytes(DFSConfigKeys.DFS_DATANODE_BALANCE_BANDWIDTHPERSEC_KEY,
+            DFSConfigKeys.DFS_DATANODE_BALANCE_BANDWIDTHPERSEC_DEFAULT),
+        conf.getInt(DFSConfigKeys.DFS_DATANODE_BALANCE_MAX_NUM_CONCURRENT_MOVES_KEY,
+            DFSConfigKeys.DFS_DATANODE_BALANCE_MAX_NUM_CONCURRENT_MOVES_DEFAULT));
+  }
+```
+
+在[HdfsConfiguration.java](https://github.com/apache/hadoop/blob/15eb84b37e6c0195d59d3a29fbc5b7417bf022ff/hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/HdfsConfiguration.java)和[DFSConfigKeys.java](https://github.com/apache/hadoop/blob/fde8ac5d8514f5146f438f8d0794116aaef20416/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/DFSConfigKeys.java)可看到对应常量读取的配置字段。
+
+由上可见，提高balancer速度，可在hdfs-site.xml中设置`dfs.datanode.balance.bandwidthPerSec`和`dfs.datanode.balance.max.concurrent.moves`值。
+
+*注: [HDFS-6595](https://issues.apache.org/jira/browse/HDFS-6595)有对`dfs.datanode.balance.max.concurrent.moves`的说明。*
+
 Reference
 ---
 
