@@ -138,7 +138,32 @@ rebalancer的配置项
 实践
 ---
 
-在实际工作中，对于几T或更大的数据，若使用默认的rebalancer做数据均衡，速度太慢了，本来以为是[HDFS-6621](https://issues.apache.org/jira/browse/HDFS-6621)这个问题导致的，但[CDH5.2.0之后的版本都修复这个问题了](https://community.cloudera.com/t5/Cloudera-Manager-Installation/hdfs-balancer-slow-to-move-data-around-in-cdh-5/td-p/17226)。在CDH5.5.2中，设置`dfs.datanode.balance.bandwidthPerSec`为1Gbps和`dfs.datanode.balance.max.concurrent.moves`为500后，不管如何设置bandwidth，rebalancer的带宽仍为80Mbps左右。
+在实际工作中，对于几T或更大的数据，若使用默认的rebalancer做数据均衡，速度太慢了，本来以为是[HDFS-6621](https://issues.apache.org/jira/browse/HDFS-6621)这个问题导致的，但[CDH5.2.0之后的版本都修复这个问题了](https://community.cloudera.com/t5/Cloudera-Manager-Installation/hdfs-balancer-slow-to-move-data-around-in-cdh-5/td-p/17226)。在CDH5.5.2中，设置`dfs.datanode.balance.bandwidthPerSec`为1Gbps和balancer端`dfs.datanode.balance.max.concurrent.moves`为500后，不管如何设置bandwidth，rebalancer的带宽最大仍为80Mbps左右。
+
+出了问题不要紧，看balancer log（若使用cdh的话，balancer log在/var/run/cloudera-scm-agent/process/xxxx-hdfs-BALANCER/logs中），有如下信息：
+
+```
+2016-04-01 11:37:20,290 WARN  [pool-2960-thread-40] balancer.Dispatcher (Dispatcher.java:dispatch(325)) - Failed to move blk_1074648017_907198 with size=42474 from 10.6.25.18:50010:DISK to 10.6.24.109:50010:DISK through 10.6.25.20:50010: block move is failed: Not able to receive block 1074648017 from /10.6.25.18:59294 because threads quota is exceeded.
+2016-04-01 11:37:20,290 WARN  [pool-2960-thread-42] balancer.Dispatcher (Dispatcher.java:dispatch(325)) - Failed to move blk_1074647913_907094 with size=10384 from 10.6.25.18:50010:DISK to 10.6.24.109:50010:DISK through 10.6.25.19:50010: block move is failed: Not able to receive block 1074647913 from /10.6.25.18:59296 because threads quota is exceeded.
+2016-04-01 11:37:20,290 WARN  [pool-2960-thread-39] balancer.Dispatcher (Dispatcher.java:dispatch(325)) - Failed to move blk_1074647063_906244 with size=22024 from 10.6.25.18:50010:DISK to 10.6.24.109:50010:DISK through 10.6.25.20:50010: block move is failed: Not able to receive block 1074647063 from /10.6.25.18:59293 because threads quota is exceeded.
+```
+
+看源码中这部分代码：
+```java
+    if (!dataXceiverServer.balanceThrottler.acquire()) { // not able to start
+      String msg = "Not able to copy block " + block.getBlockId() + " " +
+          "to " + peer.getRemoteAddressString() + " because threads " +
+          "quota is exceeded.";
+      LOG.info(msg);
+      sendResponse(ERROR, msg);
+      return;
+    }
+```
+
+可以看到[copyBlock](https://github.com/apache/hadoop/blob/3a4ff7776e8fab6cc87932b9aa8fb48f7b69c720/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataXceiver.java#L970)和[replaceBlock](https://github.com/apache/hadoop/blob/3a4ff7776e8fab6cc87932b9aa8fb48f7b69c720/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataXceiver.java#L1040)都有这段代码，即在copyBlock和replaceBlock中，都使用了balance方法
+。
+
+这么看来，还是没设置`dfs.datanode.balance.max.concurrent.moves`的问题，在Datanode的hdfs-site.xml设置`dfs.datanode.balance.max.concurrent.moves`为100，重启集群，rebalancer带宽立马到达800Mbps。问题解决。
 
 Reference
 ---
