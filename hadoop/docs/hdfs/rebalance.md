@@ -71,15 +71,10 @@ rebalance server 向namenode请求每个源节点的部分block map，请求的�
 
 循环执行上面过程，直到集群达到平衡状态或rebalance进程被终止。
 
-rebalance 时 datanode 上的一些注意项
+rebalancer的配置项
 ---
 
-每个datenode用于rebalance的带宽都是有限制的，默认是5MB/s。每个 datanode 并发的数据传输个数（包括发送和接收）不能超过5个，即在最坏的情况下，每个数据传输的带宽限制为1MB/s。可通过`dfs.balance.bandwidthPerSec, dfs.datanode.balance.bandwidthPerSec`进行设置，或者通过`hdfs dfsadmin -setBalancerBandwidth NewBandWidth`设置。
-
-提高rebalancer速度
----
-
-在实际工作中，对于几T或更大的数据，若使用默认的rebalancer做数据均衡，速度太慢了，本来以为是[HDFS-6621](https://issues.apache.org/jira/browse/HDFS-6621)这个问题导致的，但[CDH5.2.0之后的版本都修复这个问题了](https://community.cloudera.com/t5/Cloudera-Manager-Installation/hdfs-balancer-slow-to-move-data-around-in-cdh-5/td-p/17226)。但在CDH5.5.2，不管如何设置bandwidth，rebalancer还是那么慢。没办法，看源码。
+每个 datanode 用于 reblancer 并发传输数据的线程个数（包括发送和接收）不能超过5个，每个datanode rebalancer的带宽限制为1MB/s。可通过`dfs.balance.bandwidthPerSec, dfs.datanode.balance.bandwidthPerSec`进行设置，或者通过`hdfs dfsadmin -setBalancerBandwidth NewBandWidth`设置。以下是小段源码分析。
 
 查看[DataXceiverServer.java](https://github.com/apache/hadoop/blob/02a250db9f4bc54436cd9900a084215e5e3c8dae/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataXceiverServer.java#L67)：
 ```
@@ -139,6 +134,11 @@ rebalance 时 datanode 上的一些注意项
 由上可见，提高balancer速度，可在hdfs-site.xml中设置`dfs.datanode.balance.bandwidthPerSec`和`dfs.datanode.balance.max.concurrent.moves`值。
 
 *注: [HDFS-6595](https://issues.apache.org/jira/browse/HDFS-6595)有对`dfs.datanode.balance.max.concurrent.moves`的说明。*
+
+实践
+---
+
+在实际工作中，对于几T或更大的数据，若使用默认的rebalancer做数据均衡，速度太慢了，本来以为是[HDFS-6621](https://issues.apache.org/jira/browse/HDFS-6621)这个问题导致的，但[CDH5.2.0之后的版本都修复这个问题了](https://community.cloudera.com/t5/Cloudera-Manager-Installation/hdfs-balancer-slow-to-move-data-around-in-cdh-5/td-p/17226)。在CDH5.5.2中，设置`dfs.datanode.balance.bandwidthPerSec`为1Gbps和`dfs.datanode.balance.max.concurrent.moves`为500后，不管如何设置bandwidth，rebalancer的带宽仍为80Mbps左右。
 
 Reference
 ---
