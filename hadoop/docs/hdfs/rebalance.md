@@ -165,6 +165,8 @@ rebalancer的配置项
 
 这么看来，还是没设置`dfs.datanode.balance.max.concurrent.moves`的问题，在Datanode的hdfs-site.xml设置`dfs.datanode.balance.max.concurrent.moves`为100，重启集群，rebalancer带宽立马到达800Mbps。问题解决。
 
+对于正在运行的集群，为避免rebalancer占用过用资源，设置带宽为10Mbps比较合适。
+
 Reference
 ---
 
