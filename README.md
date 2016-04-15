@@ -1,7 +1,12 @@
 # bigdata
-大数据及Java，scala相关的一些笔记。
+大数据相关的一些笔记。
 
-Passages:
+## Todo
+- [HDFS小文件问题]
+- [RPC分析]
+
+## Passages:
 
 - [压缩](hadoop/docs/hdfs/压缩.md)
 - [集群调优](hadoop/docs/hdfs/tune.md)
+
