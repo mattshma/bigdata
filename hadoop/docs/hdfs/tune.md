@@ -83,3 +83,4 @@ block是物理块，split是逻辑块。一个split对应一个map输入。split
 - [mapred-default.xml](https://hadoop.apache.org/docs/stable/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml)
 - [HDFS Short-Circuit Local Reads](https://hadoop.apache.org/docs/r2.7.1/hadoop-project-dist/hadoop-hdfs/ShortCircuitLocalReads.html)
 - [Tuning the Cluster for MapReduce v2 (YARN)](http://www.cloudera.com/documentation/enterprise/latest/topics/cdh_ig_yarn_tuning.html)
+- [cdh_ig_yarn_tuning](http://www.cloudera.com/documentation/enterprise/5-3-x/topics/cdh_ig_yarn_tuning.html)
