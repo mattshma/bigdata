@@ -1,8 +1,14 @@
 # Hive client相关
 
 - 显示数据库
-
-设置`Set hiveconf:hive.cli.print.current.db=true;`。
+若要长久设置的话，在hive-site.xml中添加如下行：
+```
+  <property>
+    <name>hive.cli.print.current.db</name>
+    <value>true</value>
+  </property>
+```
+若临时设置下，只需要在hive CLI中设置`set hive.cli.print.current.db=true;`。
 
 - 执行shell命令
 
