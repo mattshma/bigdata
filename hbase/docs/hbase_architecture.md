@@ -29,3 +29,5 @@ HBase有如下特性：
 那么HBase是怎样保证强一致性的呢？
 
 
+## Reference
+- [Apache HBase ™ Reference Guide](http://hbase.apache.org/book.htm)
