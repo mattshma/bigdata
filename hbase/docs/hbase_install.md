@@ -1,4 +1,4 @@
-HBase Tutorial
+HBase Install
 ===
 
 本文按照官方文档中的步骤安装使用HBase，简要记录下遇到的问题。这里依旧以之前安装 Hadoop 的三台机器为例。三台机器情况如下：
