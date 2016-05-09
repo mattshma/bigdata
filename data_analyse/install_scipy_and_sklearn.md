@@ -36,6 +36,23 @@ centos6.4默认安装的python版本是2.6的，这里先将其升级。过程�
 
 Done。
 
-使用python2.6安装，有诸多依赖和问题，使用python2.7安装，问题都没了。先记录着。
+## python2.6安装问题
+
+使用python2.6安装，有诸多依赖和问题，使用python2.7安装，问题都没了。对于python2.6，在安装sklearn时报错：
+```
+ImportError: Your installation of Scientific Python (SciPy) 0.7.2 is out-of-date.
+    scikit-learn requires SciPy >= 0.9.
+```
+而在安装SciPy报错如下：
+```
+Running setup.py install for SciPy ... error
+    Complete output from command /usr/bin/python -u -c "import setuptools, tokenize;__file__='/tmp/pip-build-Z9sinw/SciPy/setup.py';exec(compile(getattr(tokenize, 'open', open)(__file__).read().replace('\r\n', '\n'), __file__, 'exec'))" install --record /tmp/pip-5jtzmZ-record/install-record.txt --single-version-externally-managed --compile:
+    lapack_opt_info:
+    openblas_lapack_info:
+      libraries openblas not found in ['/usr/local/lib64', '/usr/local/lib', '/usr/lib64', '/usr/lib']
+      NOT AVAILABLE
+```
+可先将依赖安装好，或安装较高版本的scipy：`pip install --upgrade SciPy==0.10`，然后再安装sklearn。
+
 
 
