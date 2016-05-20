@@ -35,7 +35,7 @@ JVM 分代
  在实际应用程序中，发现大多数对象存活时间都较短，如下图：   
  _y轴是对象存活的字节数，x轴是随着时间变化的分配的字节数_
 
-![ObjectLifetime](../img/ObjectLifetime.gif)
+![ObjectLifetime](../img/ObjectLifetime.png)
 
 可以看到，随着时间的推移，越来越少的对象在占用内存。考虑到这点，JVM 被设计为分代的结构。JVM 将对象分为3部分分别管理：Young Generation(年轻代), Old or Tenured Generation(年老代), Permanent Generation(永久代)。其中 Heap 被分为 Young Generation 和 Old Generation，而 `Method Area` 定义为 Permanent Generation。
 
@@ -123,9 +123,11 @@ Parallel Compacting Collector 相比 Parallel Collector 而言，减少了暂停
 
 ### Concurrent Mark-Sweep (CMS) Collector
 
-Young generation 的暂停时间一般不会太长，但是对于 old generation，特别是在 Heap 很大的情况下，垃圾回收会造成较长的暂停时间，为解决这个问题，Hotspot JVM引入了 CMS collector。 Young generation 的垃圾回收和 parallel collector 中一样。而 old generation 所使用的方法如下：首先是一个短暂的暂停，称之为 `initial mark`, 这个阶段识别出仍被应用引用的存活对象，接着是 `concurrent mark` 阶段，这个阶段 collector 会标记所有存活对象，而此时应用仍在运行，这不能保证所有活动对象都被标记出来，所有还需要一次暂停来标记所有对象，这个阶段称为 `remark`, 由于这个阶段比 `initial mark` 更为重要，所以这里使用的是多线程，`remark`之后，所有存活对象都被标记出来了，最后一步是 `concurrent sweep` 阶段，这个阶段会并发清除过期对象。如下图：
+Young generation 的暂停时间一般不会太长，但是对于 old generation，特别是在 Heap 很大的情况下，垃圾回收会造成较长的暂停时间，为解决这个问题，Hotspot JVM引入了 CMS collector。 Young generation 的垃圾回收和 parallel collector 中一样。而 old generation 所使用的方法如下：首先是一个短暂的暂停，称之为 `initial mark`, 这个阶段识别出仍被应用引用的存活对象，接着是 `concurrent mark` 阶段，这个阶段 collector 会标记所有存活对象，而此时应用仍在运行，这不能保证所有活动对象都被标记出来，所有还需要一次暂停来标记所有对象，这个阶段称为 `remark`, 由于这个阶段比 `initial mark` 更为重要，所以这里使用的是多线程，`remark`之后，所有存活对象都被标记出来了，最后一步是 `concurrent sweep` 阶段，这个阶段会并发清除过期对象。
 
-![cms](../img/cms.png)
+Parallel 
+
+![cms](../img/cms.gif)
 
 因为标记的过程中，应用程序仍在分配对象，因此 old generation 也仍在增大，所以 cms collector 需要更大的heap空间。另外 cms 是唯一一个没有压缩的 collector ，其减少了暂停时间，但也导致heap中容易出现碎片。为了解决这个问题，cms 会跟踪 popular 对象的大小，来预估未来的需求，并可能分割或合并空闲块来满足需求。和其他collector 不同的是，cms collector 不会等到 old generation 满了才运行内存回收，可以设置在某个值进行内存回收，该值通过 `–XX:CMSInitiatingOccupancyFraction=n` 来设置。n的默认值 68，即68%。
 
@@ -178,3 +180,4 @@ Reference
 - [Java Garbage Collection Basics](http://www.oracle.com/webfolder/technetwork/tutorials/obe/java/gc01/index.html)
 - [Memory Management in the Java HotSpot™ Virtual Machine](http://www.oracle.com/technetwork/java/javase/tech/memorymanagement-whitepaper-1-150020.pdf)
 - [Java SE HotSpot at a Glance](http://www.oracle.com/technetwork/java/javase/tech/index-jsp-136373.html)
+- [Java垃圾回收](http://www.jianshu.com/p/57457a351b8a/comments/63860)

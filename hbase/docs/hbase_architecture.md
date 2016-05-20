@@ -26,8 +26,20 @@ HBase有如下特性：
 > - 最终一致性：更新完成后，在“不一致窗口”后的请求的返回值都是一致。最终一致性是弱一致性的特例。
 >
 
-那么HBase是怎样保证强一致性的呢？
-
+- HBase是怎样保证强一致性的呢？
+  - 每个值只出现在一个region。
+  - 同一时间每个region只被分配给一个region server。
+  - 所有行内的mutation操作都是原子操作。
+  - 通过任何API返回的行的内容总是一个完整的行。
+- HBase有哪几种一致性？
+  - timeline 
+  - strong
+- hbase 建表时指定的复制备份是啥意思？和hfds备份数为3有啥关系?
+- hbase强一致性与hdfs复制3份的关系。
 
 ## Reference
 - [Apache HBase ™ Reference Guide](http://hbase.apache.org/book.htm)
+- [Consistency](https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/client/Consistency.html)
+- [HBase: How does replication work](http://stackoverflow.com/questions/5417574/hbase-how-does-replication-work)
+- [HBase Read Replicas](http://www.cloudera.com/documentation/enterprise/5-4-x/topics/admin_hbase_read_replicas.html)
+- [HBase Read High Availability Using Timeline Consistent Region Replicas](http://www.slideshare.net/enissoz/hbase-high-availability-for-reads-with-time)
