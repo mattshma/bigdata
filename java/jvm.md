@@ -10,7 +10,7 @@ JVM Architecture
 ---
 JVM 主要包括如下部分： `Classloader`, `Runtime data areas`, `Execution engine`。这三者关系如下图：
 
-![Hotspot architecture](../img/hotspot_jvm_architecture.png)
+![Hotspot architecture](img/hotspot_jvm_architecture.png)
 
 其中优化最多的是 `Heap` 大小和使用适当的 `Garbage Collector`。虽然 `JIT Compiler` 对性能的影响也大，但对于新版本的 JVM 而言，其很少需要被优化。 
 
@@ -35,11 +35,11 @@ JVM 分代
  在实际应用程序中，发现大多数对象存活时间都较短，如下图：   
  _y轴是对象存活的字节数，x轴是随着时间变化的分配的字节数_
 
-![ObjectLifetime](../img/ObjectLifetime.png)
+![ObjectLifetime](img/ObjectLifetime.png)
 
 可以看到，随着时间的推移，越来越少的对象在占用内存。考虑到这点，JVM 被设计为分代的结构。JVM 将对象分为3部分分别管理：Young Generation(年轻代), Old or Tenured Generation(年老代), Permanent Generation(永久代)。其中 Heap 被分为 Young Generation 和 Old Generation，而 `Method Area` 定义为 Permanent Generation。
 
-![hotspot_heap](../img/hotspot_heap.png)
+![hotspot_heap](img/hotspot_heap.png)
 
 Young Generation 是所有新对象产生和生成的地方。当年轻代装满对象后，会引起一次 `minor garbage collection`。 `minor garbage collection` 剔除过期对象，并最后将存活的对象移到 Old Generation 中。所有的 `minor garbage collection` 都会造成 Stop the World Event，这意味着所有应用的线程都会暂停，直到 gc 完成。
 
@@ -52,34 +52,34 @@ Garbage Collection 过程
 先说下自动垃圾回收的过程。  
 1. Marking    
   标记哪些内存块在使用，哪些没有在使用。   
-![marking](../img/marking.png)  
+![marking](img/marking.png)  
 2. Normal Deletion     
   正常删除未被引用的对象，保留被引用的对象。内存分配器维护空内存块，以便新对象的分配.
-![Normal Deletion](../img/normal_deletion.png)  
+![Normal Deletion](img/normal_deletion.png)  
 2.a Deletion with compacting  
 为提高性能，除了删除被引用对象，还可能压缩被保留的对象。  
-![Deletion with Compacting](../img/deletion_with_compact.png)
+![Deletion with Compacting](img/deletion_with_compact.png)
 
 以上是堆中自动垃圾回收的过程，接下来看下 generational garbage Collection 的大致过程。
 
 在 JVM 分代中已经提到过，Young Generation 是所有新对象产生的地方。而hotspot中 Young Generation 又可以分为三部分: eden, S0, S1(S0, S1 统称为 Survivor 空间).
 
 1. 新对象在 eden 区域分配，两个 survivor space 都为空。   
-![gc_1](../img/gc_1.png)
+![gc_1](img/gc_1.png)
 2. 当 eden 区域填满时，触发 `minor garbage collection`。   
-![gc_2](../img/gc_2.png)
+![gc_2](img/gc_2.png)
 3. 被引用的对象被移到第一个 survivor 空间，未被引用的对象被删除。
-![gc_3](../img/gc_3.png)
+![gc_3](img/gc_3.png)
 4. 在下一次 eden 区域发生 `minor garbage collection` 时，未被引用的对象被删除，而被引用的对象被移到另一个 survivor 空间(S1)中。同时，第一个 survivor 空间（S0）中仍活的对象也移到S1中，同时其年龄增加。这时所有对象都在S1中，而 eden 和 S0 的为空。
-![gc_4](../img/gc_4.png)
+![gc_4](img/gc_4.png)
 5. 再下一次 `minor garbage collection` 时，处理流程与上面一样，只不过 survivor 空间从S1换为S0，仍然活着对象的年龄加1。
-![gc_5](../img/gc_5.png)
+![gc_5](img/gc_5.png)
 6. 在若干次 `minor garbage collection` 后，Young Generation 中对象的年龄达到阈值。它们从 Young Generation 迁移到 Old Generation。
-![gc_6](../img/gc_6.png)
+![gc_6](img/gc_6.png)
 7. `minor garbage collection` 不断被触发，Old Generation 中的对象不断增加
-![gc_7](../img/gc_7.png)
+![gc_7](img/gc_7.png)
 8. 足够多次的`minor garbage collection`后，Old Generation的对象越来越多，最终会在 Old Generation 进行一次`major GC`来清理和压缩空间。
-![gc_8](../img/gc_8.png)
+![gc_8](img/gc_8.png)
 
 _在 hotspot 版的JVM中，仅在 Old Generation 中才有压缩(compact)操作，因为hotspot认为 young generation 仅仅是一个copy collector，没必要压缩。_
 
@@ -127,7 +127,7 @@ Young generation 的暂停时间一般不会太长，但是对于 old generation
 
 Parallel 
 
-![cms](../img/cms.gif)
+![cms](img/cms.gif)
 
 因为标记的过程中，应用程序仍在分配对象，因此 old generation 也仍在增大，所以 cms collector 需要更大的heap空间。另外 cms 是唯一一个没有压缩的 collector ，其减少了暂停时间，但也导致heap中容易出现碎片。为了解决这个问题，cms 会跟踪 popular 对象的大小，来预估未来的需求，并可能分割或合并空闲块来满足需求。和其他collector 不同的是，cms collector 不会等到 old generation 满了才运行内存回收，可以设置在某个值进行内存回收，该值通过 `–XX:CMSInitiatingOccupancyFraction=n` 来设置。n的默认值 68，即68%。
 
