@@ -8,13 +8,38 @@
 
 
 ## Hive metastore
-数据拷贝完成后，接下来需要拷贝hive的元数据，这里说下元数据迁移的几种方法：1) 如果是hive同版本拷贝元数据，通过mysqldump导出数据，然后直接再导入到目标mysql服务即可；2）如果源集群使用的是cloudera enterpress版本，可通过其提供的hive复制功能来拷贝；3）如果是hive升级的话，可通过`schematool`或升级脚本来升级；4）如果是迁移集群且hive跨版本的话，若hive数据量比较小，可直接在目标mysql中新建表，然后load数据；5）如果迁移集群且跨版本的话，hive表结构又非常多，可先通过mysqldump导出源metastore相关数据，然后导入到目标mysql中，接着在目标mysql中运行升级脚本。
+数据拷贝完成后，接下来需要拷贝hive的元数据，若不拷贝的话，会出现hdfs有数据，但hive没数据的情况。这里说下元数据迁移的几种方法：1) 如果是hive同版本拷贝元数据，通过mysqldump导出数据，然后直接再导入到目标mysql服务即可；2）如果源集群使用的是cloudera enterpress版本，可通过其提供的hive复制功能来拷贝；3）如果是hive升级的话，可通过`schematool`或升级脚本来升级；4）如果是迁移集群且hive跨版本的话，若hive数据量比较小，可直接在目标mysql中新建表，然后load数据；5）如果迁移集群且跨版本的话，hive表结构又非常多，可先通过mysqldump导出源metastore相关数据，然后导入到目标mysql中，接着在目标mysql中运行升级脚本。
 
 注意：不管以上哪种方法，在目标集群`source`数据前，最好将其上的相关数据及表结构备份下来！这一步很重要，若升级失败，可通过备份数据回滚。
 
 hive升级脚本一般位于`/opt/cloudera/parcels/CDH/lib/hive/scripts`中。相关方法见README。
 
 若跨版本时，只导入数据而没有运行升级脚本的话，会报错`MetaException(message:Hive Schema version 1.1.0 does not match metastore's schema version 0.12.0 Metastore is not upgraded or corrupt)`，hiveserver2也无法正常运行。运行升级脚本后即可。
+
+### 实际操作
+- 关掉新老集群的hive，确保hive元数据文件没更新操作。
+- 新集群hive metastore mysql备份：`mysqldump -uhadoop -p --databases hive > new_hive_metastore_bak.sql`。
+- 老集群hive metastore mysqldump: `mysqldump -udbmanager -p metastore > old_hive_metastore.sql`，将该元数据文件传到新集群hive机器上。
+- 老集群hive元数据文件传到新集群后，进入新集群mysql的hive元数据库后，执行该文件`source old_hive_metastore.sql`。
+- 升级新集群hive元数据库文件，老集群hive版本为0.13，新集群hive版本为1.1.0，在mysql的元数据库中，执行如下命令:
+```
+hadoop:hive> source upgrade-0.13.0-to-0.14.0.mysql.sql
++--------------------------------------------------+
+|                                                  |
++--------------------------------------------------+
+| Upgrading MetaStore schema from 0.13.0 to 0.14.0 |
++--------------------------------------------------+
+1 row in set, 1 warning (0.00 sec)
+hadoop:hive> source upgrade-0.14.0-to-1.1.0.mysql.sql
++-------------------------------------------------+
+|                                                 |
++-------------------------------------------------+
+| Upgrading MetaStore schema from 0.14.0 to 1.1.0 |
++-------------------------------------------------+
+1 row in set, 1 warning (0.00 sec)
+```
+- 启动新老集群hive，完成。
+
 
 ## Hue
 
