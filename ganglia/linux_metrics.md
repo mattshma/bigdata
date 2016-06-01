@@ -78,7 +78,7 @@ CPU使用率有如下7种情况：
 通过`df -i`可以看到各盘的inode情况。
 
 ### 磁盘是否损坏
-megacli或SMART监控。
+megacli或SMART监控。Raid阵列是否有问题。
 
 ## Network
 各网口的网络监控项如下：
@@ -111,7 +111,9 @@ megacli或SMART监控。
 服务的监控可监控其对应的端口。
 
 ## 其他
-如CPU风扇转速，CPU温度，磁盘温度的监控。
+- 机器重启
+- 机器关机
+- 其他不太重要项如CPU风扇转速，CPU温度，磁盘温度的监控。
 
 针对上述监控，也可通过python中的[psutil模块](https://pythonhosted.org/psutil/)来统一获得。
 
