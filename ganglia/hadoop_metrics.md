@@ -221,7 +221,7 @@
 - 进程是否挂掉
 - JVM监控
 
-# #参考
+## 参考
 - [Hadoop Monitor Metrics](https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/Metrics.html)
 - [HBase Metrics](https://hbase.apache.org/book.html#hbase_metrics)
 - [Monitoring Flume](https://cwiki.apache.org/confluence/display/FLUME/Monitoring+Flume)
