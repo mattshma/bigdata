@@ -4,7 +4,7 @@
 
 ## JVM
 每个metric记录除包含以下监控项之一外，还包括如ProcessName，SessionID和Hostname之类的额外信息。
-## MemNonHeap
+### MemNonHeap
 - MemNonHeapUsedM
 - MemNonHeapCommitedM
 - MemNonHeapMaxM
@@ -221,6 +221,7 @@
 - 进程是否挂掉
 - JVM监控
 
+# #参考
 - [Hadoop Monitor Metrics](https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/Metrics.html)
 - [HBase Metrics](https://hbase.apache.org/book.html#hbase_metrics)
 - [Monitoring Flume](https://cwiki.apache.org/confluence/display/FLUME/Monitoring+Flume)
