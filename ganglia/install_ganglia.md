@@ -247,3 +247,5 @@ gmond一直输出：
 - [Ganglia Quick Start](https://github.com/ganglia/monitor-core/wiki/Ganglia-Quick-Start)
 - [Monitoring Multiple Clusters using Ganglia](https://jablonskis.org/2011/monitoring-multiple-clusters-using-ganglia/index.html)
 - [Introduction to Ganglia on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/introduction-to-ganglia-on-ubuntu-14-04)
+- [gmond.conf](http://linux.die.net/man/5/gmond.conf)
+- [Ganglia GMond Python Modules](https://github.com/ganglia/monitor-core/wiki/Ganglia-GMond-Python-Modules)
