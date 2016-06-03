@@ -162,7 +162,53 @@ boolean型，若为true，则gmond允许主机运行gexec任务。
 - location     
 用于标识主机位置，如Rack, Rank and Plane格式。
 
+#### udp_send_channel
+UDP发送通道。
 
+- bind_hostname    
+boolean型，通知gmond使用源地址解析主机名。适用范围：多播或单播。
+
+- bind    
+boolean型，使用主机名。适用范围：多播或单播。
+
+- mcast_join          
+ip型，gmond创建UDP套接字并加入由IP指定的多播组。适用范围：多播。
+
+- mcast_if         
+网卡接口，当指定该选项时，将接收来自指定网卡接口（如eth0）的数据。适用范围：多播。
+
+- host     
+主机名或IP，当指定该选项时，gmond将向该主机发送数据。适用范围：单播。
+
+- port   
+指定host的端口号，默认为8649，适用范围：多播或单播。
+
+- ttl        
+time-to-live，该值限制了数据所允许传播的跃点数。适用范围：多播或单播。
+
+注意，只能用于单播的选项和只能用于多播的选项是互斥的。
+
+#### udp_recv_channel
+UDP接收通道。对于参数同udp_send_channel的部分，此不介绍。
+
+- mcast_join        
+- mcast_if  
+- bind   
+- port
+- family           
+IP版本，IPv4或IPv6。适用范围：多播或单播。
+- acl   
+只接收该控制列表中的数据。适用范围：多播或单播。
+
+#### tcp_accept_channel
+TCP接收通道。
+
+- bind
+- port
+- family
+- interface
+- timeout
+ 
 ## 安装ganglia-web 和 ganglia-webfront
 下载ganglia-webfront和ganglia-web，解压到/opt目录。配置httpd服务如下：
 ```
