@@ -56,7 +56,7 @@ shuffle做为MR奇迹发生的地方，优化好的话能很大程序提高job�
 
 另外`mapreduce.reduce.shuffle.parallelcopies`定义了reduce并发copy map输出的线程个数，当map数较多时，可适当提高该值来提高copy速度。
 
-## 其他调整
+## HDFS其他调整
 ### Uber
 在MR1中有JVM重用的概念，在YARN中，相应的概念为Uber，对于小任务，Uber会省掉申请和退出JVM的次数，以提高Job执行次数。默认情况下YARN禁用Uber，此时AM会对job的每一个task都申请一个container，task执行完，该container会被回收。开启uber后，"小job"的所有task都在一个jvm运行。开启uber的参数为`mapreduce.job.ubertask.enable`，"小job"的定义为`mapreduce.job.ubertask.maxmaps`（默认为9），`mapreduce.job.ubertask.maxreduces`（默认为1，当前版本不支持reduce数大于1的情况），`mapreduce.job.ubertask.maxbytes`（默认为空）。
 
@@ -77,6 +77,46 @@ block是物理块，split是逻辑块。一个split对应一个map输入。split
 
 配置Unix Domain Socket需要`libhadoop.so`，可通过`hadoop checknative`查看其是否已安装。short-circuit相关参数为`dfs.client.read.shortcircuit`和`dfs.domain.socket.path`。
 
+### Rebalance
+参见[Hadoop Rebalance](rebalance.md)，调整`dfs.balance.bandwidthPerSec`为50MB，在datanode的hdfs-site.xml中设置`dfs.datanode.balance.max.concurrent.moves`为100。
+
+### 压缩
+配置lzo压缩，见[压缩](压缩.md)。
+
+### HA
+HDFS和Yarn的HA都需开启。
+
+### YARN Web UI
+调整hdfs的core-site.xml文件，增加如下项：
+```
+<property>
+  <name>hadoop.http.staticuser.user</name>
+  <value>yarn</value>
+</property>
+```
+以免造成User [dr.who] is not authorized to view the logs的问题。
+
+### 垃圾回收
+`fs.trash.interval`设置为7天。
+
+### handler 调整
+`dfs.namenode.handler.count`的值调整为datanode数的20倍大小，`dfs.namenode.service.handler.count`调整为datanode数的20倍大小，`dfs.datanode.handler.count`默认为3，调整为20。需要注意的是，每增加一个线程，相应的内存也需要增加。
+
+## HBase调整
+### 复制
+`hbase.replication`设置为true，`hbase.region.replica.replication.enabled`设置为true。
+
+### handlder 调整
+`hbase.master.handler.count`调整为200，`hbase.regionserver.handler.count`调整为200，`hbase.regionserver.metahandler.count`调整为50。
+
+### ipc server callqueue
+调整hbase-site.xml，增加如下项：
+```
+<property>
+ <name>hbase.ipc.server.max.callqueue.size</name>
+ <value>5368709120</value>
+</property>
+```
 
 ## Reference
 - [MapReduce YARN Memory Parameters](https://support.pivotal.io/hc/en-us/articles/201462036-MapReduce-YARN-Memory-Parameters)
