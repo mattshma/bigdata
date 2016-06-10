@@ -9,6 +9,8 @@
 # make;make install
 ```
 
+安装后，对于libpython做个软链：`ln -s /usr/local/python/lib/libpython2.7.so.1.0 /usr/lib64/libpython2.7.so`，否则接下来安装ganglia会报`cannot find -lpython2.7`。
+
 注意，若没加`CFLAGS=-fPIC`，在编译ganglia时，会报如下错：
 ```
 /usr/bin/ld: /usr/local/lib/libpython2.7.a(abstract.o): relocation R_X86_64_  
@@ -25,7 +27,7 @@ ompile with -fPIC
 
 yum安装依赖如下：
 ````
-# yum -y install perl-ExtUtils-Embed apr-devel expat-devel pcre-devel
+# yum -y install perl-ExtUtils-Embed apr-devel expat-devel pcre-devel rrdtool-devel
 ````
 
 ## 安装
@@ -209,18 +211,58 @@ TCP接收通道。
 - interface
 - timeout
  
-## 安装ganglia-web 和 ganglia-webfront
-下载ganglia-webfront和ganglia-web，解压到/opt目录。配置httpd服务如下：
-```
-Alias /ganglia /opt/ganglia-webfrontend
+## 安装ganglia-web
 
-<Location /ganglia>
-  Order deny,allow
-  # Deny from all
-  Allow from all
-</Location>
+ganglia-web使用php编写，所以在安装ganglia-web前，需要先安装php和php-fpm: `yum -y install php-devel php-fpm`，nginx配置php服务：
 ```
-启动httpd服务。一段时间后，即可看到监控数据。
+location ~ \.php$ {
+    root                /var/www;
+    fastcgi_pass        127.0.0.1:9000;
+    fastcgi_index       index.php;
+    include             fastcgi_params;
+    fastcgi_param       SCRIPT_FILENAME  $document_root/$fastcgi_script_name;
+}
+```
+
+修改`/etc/php-fpm.d/www.conf`，将user和group换成对应nginx中的用户，如nobody等。
+
+在`/var/www`目录下新建文件test.php:
+
+```
+<?php
+    phpinfo();
+?>
+```
+
+启动php-fpm: `service php-fpm start`，在浏览器中输入nginx_ip/test.php，查看php是否配置成功。
+
+下载ganglia-web，解压后进入该目录，修改Makefile文件：
+```
+GDESTDIR = /var/www/ganglia           # 对应php的目录
+GCONFDIR = /etc/nginx/conf.d/ganglia-web.conf
+GWEB_STATEDIR = /etc/ganglia/ganglia-web
+GMETAD_ROOTDIR = /data/ganglia
+APACHE_USER = nobody
+```
+
+执行`make install`。
+
+进入/var/www/ganglia目录，修改conf.php如下项：
+
+```
+$conf['gweb_confdir'] = "/etc/ganglia/ganglia-web";
+$conf['gmetad_root'] = "/data/ganglia";
+```
+
+配置nginx：
+```
+location /ganglia {
+   root /var/www;
+   index  index.html index.htm index.php;
+}
+```
+
+重启nginx，即可看到gangli数据。
 
 ## 问题
 ### gmetad启动不了
@@ -249,3 +291,4 @@ gmond一直输出：
 - [Introduction to Ganglia on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/introduction-to-ganglia-on-ubuntu-14-04)
 - [gmond.conf](http://linux.die.net/man/5/gmond.conf)
 - [Ganglia GMond Python Modules](https://github.com/ganglia/monitor-core/wiki/Ganglia-GMond-Python-Modules)
+- [ganglia-web Installation](https://github.com/ganglia/ganglia-web/wiki#Installation)
