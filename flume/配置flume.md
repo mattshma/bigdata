@@ -40,7 +40,32 @@ java.lang.ClassNotFoundException: org.apache.flume.interceptor.EventTimestampInt
 org.apache.flume.FlumeException: Interceptor.Builder not found.
 ```
 
-下载[flume-timestamp-interceptor](https://github.com/haebin/flume-timestamp-interceptor)，将`flume-timestamp-interceptor-1.2.0.jar`放到`FLUME_HOME/lib`中
+下载[flume-timestamp-interceptor](https://github.com/haebin/flume-timestamp-interceptor)，将flume-timestamp-interceptor-1.2.0.jar放到FLUME_HOME/lib中。
+
+### hdfs
+报错如下：
+```
+2016-06-24 15:38:13,116 (SinkRunner-PollingRunner-DefaultSinkProcessor) [WARN - org.apache.flume.sink.hdfs.HDFSEventSink.process(HDFSEventSink.java:455)] HDFS IO error
+java.io.IOException: No FileSystem for scheme: hdfs
+	at org.apache.hadoop.fs.FileSystem.getFileSystemClass(FileSystem.java:2623)
+	at org.apache.hadoop.fs.FileSystem.createFileSystem(FileSystem.java:2637)
+	at org.apache.hadoop.fs.FileSystem.access$200(FileSystem.java:93)
+	at org.apache.hadoop.fs.FileSystem$Cache.getInternal(FileSystem.java:2680)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:2662)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:379)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:296)
+	at org.apache.flume.sink.hdfs.BucketWriter$1.call(BucketWriter.java:243)
+	at org.apache.flume.sink.hdfs.BucketWriter$1.call(BucketWriter.java:235)
+	at org.apache.flume.sink.hdfs.BucketWriter$9$1.run(BucketWriter.java:679)
+	at org.apache.flume.auth.SimpleAuthenticator.execute(SimpleAuthenticator.java:50)
+	at org.apache.flume.sink.hdfs.BucketWriter$9.call(BucketWriter.java:676)
+	at java.util.concurrent.FutureTask$Sync.innerRun(FutureTask.java:334)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:166)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
+	at java.lang.Thread.run(Thread.java:722)
+```
+将hadoop-hdfs-2.6.0-cdh5.6.0.jar放入FLUME_HOME/lib中。
 
 ### SequenceFile
 报错如下：
@@ -66,7 +91,7 @@ Caused by: java.lang.ClassNotFoundException: org.apache.hadoop.io.SequenceFile$C
         at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
         ... 12 more
 ```
-将`hadoop-common-2.6.0-cdh5.6.0.jar`和`commons-configuration-1.7.jar`放入`FLUME/lib`中。
+将hadoop-common-2.6.0-cdh5.6.0.jar和commons-configuration-1.7.jar放入FLUME_HOME/lib中。
 
 ### zookeeper/Watcher
 报错：
@@ -106,7 +131,7 @@ Caused by: java.lang.ClassNotFoundException: org.apache.zookeeper.Watcher
         at java.lang.ClassLoader.loadClass(ClassLoader.java:424)
 
 ```
-将`zookeeper-3.4.5-cdh5.6.0.jar`拷贝到`FLUME/lib`中。
+将zookeeper-3.4.5-cdh5.6.0.jar拷贝到FLUME_HOME/lib中。
 
 ### PlatformName
 报错：
@@ -137,7 +162,7 @@ Caused by: java.lang.ClassNotFoundException: org.apache.hadoop.util.PlatformName
 ```
 
 
-拷贝hadoop-auth-2.6.0-cdh5.6.0.jar。
+拷贝hadoop-auth-2.6.0-cdh5.6.0.jar到FLUME_HOME/lib中。
 
 ### Tracer
 报错如下：
@@ -167,6 +192,36 @@ Caused by: java.lang.ClassNotFoundException: org.apache.htrace.core.Tracer$Build
     at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
     ... 16 more
 ```
-拷贝htrace-core4-4.0.1-incubating.jar。
+拷贝htrace-core4-4.0.1-incubating.jar到FLUME_HOME/lib中。
 
+### hadoop config files
+HDFS开启HA，设置了nameservice，故flume无法找到hdfs地址，报错如下：
+```
+java.lang.IllegalArgumentException: java.net.UnknownHostException: nameservice1
+	at org.apache.hadoop.security.SecurityUtil.buildTokenService(SecurityUtil.java:374)
+	at org.apache.hadoop.hdfs.NameNodeProxies.createNonHAProxy(NameNodeProxies.java:310)
+	at org.apache.hadoop.hdfs.NameNodeProxies.createProxy(NameNodeProxies.java:176)
+	at org.apache.hadoop.hdfs.DFSClient.<init>(DFSClient.java:708)
+	at org.apache.hadoop.hdfs.DFSClient.<init>(DFSClient.java:651)
+	at org.apache.hadoop.hdfs.DistributedFileSystem.initialize(DistributedFileSystem.java:148)
+	at org.apache.hadoop.fs.FileSystem.createFileSystem(FileSystem.java:2643)
+	at org.apache.hadoop.fs.FileSystem.access$200(FileSystem.java:93)
+	at org.apache.hadoop.fs.FileSystem$Cache.getInternal(FileSystem.java:2680)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:2662)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:379)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:296)
+	at org.apache.flume.sink.hdfs.BucketWriter$1.call(BucketWriter.java:243)
+	at org.apache.flume.sink.hdfs.BucketWriter$1.call(BucketWriter.java:235)
+	at org.apache.flume.sink.hdfs.BucketWriter$9$1.run(BucketWriter.java:679)
+	at org.apache.flume.auth.SimpleAuthenticator.execute(SimpleAuthenticator.java:50)
+	at org.apache.flume.sink.hdfs.BucketWriter$9.call(BucketWriter.java:676)
+	at java.util.concurrent.FutureTask$Sync.innerRun(FutureTask.java:334)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:166)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
+	at java.lang.Thread.run(Thread.java:722)
+Caused by: java.net.UnknownHostException: nameservice1
+```
+
+将hadoop的core-site.xml和hdfs-site.xml文件放到FLUME_HOME/conf目录即可。
 
