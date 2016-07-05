@@ -107,7 +107,9 @@ select * from table where 0 <= id < 50;
 select * from table where 50 <= id < 100;
 ```
 
-但是，若某个表没有主键，又指定多个mapper运行，会报错：`Error during import: No primary key could be found for table xx_db.yy_table. Please specify one with --split-by or perform a sequential import with '-m 1'.`
+但是，若某个表没有主键，又指定多个mapper运行，会报错：`Error during import: No primary key could be found for table xx_db.yy_table. Please specify one with --split-by or perform a sequential import with '-m 1'.`。
+
+若使用并行导入出现数据比原始数据多的情况，可先去掉并行导入再测试是否数据导入正常。
 
 ### --split-by
 对于上述情况，可通过`--split-by`来指定其他列做为split列。通过比较`select min(<split-by>), max(<split-by>) from <table name>`选取一个选择性高的列。但若min和max不是最优的判断方法呢？
