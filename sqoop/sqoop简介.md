@@ -100,7 +100,7 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 
 ## 并行导入
 
-为加快导入速度，一般会指定多个mapper，sqoop根据主键id生成sql语句`select max(id) as max, select min(id) as min from table [where 如果指定了where子句];`来得出上下限，根据得出的上下限及指定的mapper数来拆分任务。如max id为100， min id为0，指定的mapper数为2，则会分成如下两个sql执行：
+默认使用sqoop启动4个map进行数据导入。为加快导入速度，一般会指定多个mapper，sqoop根据主键id生成sql语句`select max(id) as max, select min(id) as min from table [where 如果指定了where子句];`来得出上下限，根据得出的上下限及指定的mapper数来拆分任务。如max id为100， min id为0，指定的mapper数为2，则会分成如下两个sql执行：
 
 ```
 select * from table where 0 <= id < 50;
@@ -109,7 +109,7 @@ select * from table where 50 <= id < 100;
 
 但是，若某个表没有主键，又指定多个mapper运行，会报错：`Error during import: No primary key could be found for table xx_db.yy_table. Please specify one with --split-by or perform a sequential import with '-m 1'.`。
 
-若使用并行导入出现数据比原始数据多的情况，可先去掉并行导入再测试是否数据导入正常。
+若使用并行导入出现数据比原始数据多的情况，调整`-m 1`再测试是否数据导入正常。
 
 ### --split-by
 对于上述情况，可通过`--split-by`来指定其他列做为split列。通过比较`select min(<split-by>), max(<split-by>) from <table name>`选取一个选择性高的列。但若min和max不是最优的判断方法呢？
