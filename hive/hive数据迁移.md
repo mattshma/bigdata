@@ -53,52 +53,51 @@ hadoop:hive> source upgrade-0.14.0-to-1.1.0.mysql.sql
 数据拷贝完成，需要更新差量数据的元数据表，由于新集群数据已有不同于老集群的元数据，因此不能按之前说的方法拷贝，考虑到元数据表依赖复杂，因此最好写脚本手动添加分区。
 
 > 元数据表说明：  
-#### Database
-- DBS    
-用来存储hive中数据库的基本信息。
-
-- DATABASE_PARAMS       
-数据库表的属性参数。
-
-#### Table
-- TBLS      
-hive中表，视图的基本信息。
-
-- TABLE_PARAMS    
-表，视图的属性信息。
-
-#### 数据存储
-- SDS    
-表保存文件存储的基本信息。如INPUT_FORMAT，是否压缩等。
-
-#### 序列化
-- SERDES    
-表存储序列化使用的类信息。
-
-- SERDES_PARAMS     
-存储序列化具体的参数及值
-
-#### 列信息
-- CDS   
-存储数据仓库中的CD_ID，该表只有这一个字段。
-
-- COLUMN_V2    
-存储CD_ID对应的所有字段信息。
-
-#### 分区
-- PARTITIONS   
-存储hive中所有分区信息，查看表分区信息可通过tbl_id来查看。
-
-- PARTITION_KEY_VALS         
-PARTITION_KEY_VALS 存储PARTITION_KEY中描述的分区字段的值，通常配合PARTITIONS 和PARTITION_KEYS表使用。
-
-#### bucket 
-- BUCKETING_COLS     
-所有使用分桶的SDS。
-
-#### 权限相关
-主要包括DB_PRIVS，TBL_PRIVS，PART_PRIVS。
-```
+>#### Database
+>- DBS    
+>用来存储hive中数据库的基本信息。
+>
+>- DATABASE_PARAMS       
+>数据库表的属性参数。
+>
+>#### Table
+>- TBLS      
+>hive中表，视图的基本信息。
+>
+>- TABLE_PARAMS    
+>表，视图的属性信息。
+>
+>#### 数据存储
+>- SDS    
+>表保存文件存储的基本信息。如INPUT_FORMAT，是否压缩等。
+>
+>#### 序列化
+>- SERDES    
+>表存储序列化使用的类信息。
+>
+>- SERDES_PARAMS     
+>存储序列化具体的参数及值
+>
+>#### 列信息
+>- CDS   
+>存储数据仓库中的CD_ID，该表只有这一个字段。
+>
+>- COLUMN_V2    
+>存储CD_ID对应的所有字段信息。
+>
+>#### 分区
+>- PARTITIONS   
+>存储hive中所有分区信息，查看表分区信息可通过tbl_id来查看。
+>
+>- PARTITION_KEY_VALS         
+>PARTITION_KEY_VALS 存储PARTITION_KEY中描述的分区字段的值，通常配合PARTITIONS 和PARTITION_KEYS表使用。
+>
+>#### bucket 
+>- BUCKETING_COLS     
+>所有使用分桶的SDS。
+>
+>#### 权限相关
+>主要包括DB_PRIVS，TBL_PRIVS，PART_PRIVS。
     
 ## Hue
 
