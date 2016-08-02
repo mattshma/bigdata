@@ -60,7 +60,7 @@ Table       (HBase table)
 
 
 ## Reference
-- [Apache HBase ™ Reference Guide](http://hbase.apache.org/book.htm)
+- [Apache HBase ™ Reference Guide](https://hbase.apache.org/book.html)
 - [Consistency](https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/client/Consistency.html)
 - [HBase: How does replication work](http://stackoverflow.com/questions/5417574/hbase-how-does-replication-work)
 - [HBase Read Replicas](http://www.cloudera.com/documentation/enterprise/5-4-x/topics/admin_hbase_read_replicas.html)

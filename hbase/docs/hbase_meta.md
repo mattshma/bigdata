@@ -1,6 +1,7 @@
 # hbase:meta表简介
 
 ## hbase:meta介绍
+在0.96之前的版本中，hbase的meta信息通过-ROOT-表来查询，在0.96.0之后的版本中，移除了-ROOT-表，.meta.被重重命名为hbase:meta，并且其位置存储在zookeeper中。
 
 ```
 # hbase shell
@@ -19,7 +20,7 @@ TestTable,00000000000000000000183519,14 column=info:regioninfo, timestamp=145751
  4f509.
 ```
 
-rowkey即为每个Region的Name，rowkey的格式为：`tableName,regionStartKey,regionId.encodedRegionName`，encodedRegionName是对RegionName中`.`前部分（即`tableName,regionStartKey,regionId`）的md5 hash。根据rowkey可以找到相应region在hdfs中的位置：`/<hbaseRootDir>/<tableName>/<encodedRegionName>/<columnFamily>/<fileName>`。fileName是基于Java内建的随机数生成器产生的任意数字。
+rowkey即为每个Region的Name，rowkey的格式为：`tableName,regionStartKey,regionId.encodedRegionName`，regionId通常是[region创建的时间点](https://hbase.apache.org/apidocs/src-html/org/apache/hadoop/hbase/HRegionInfo.html#line.375)。encodedRegionName是对RegionName中`.`前部分（即`tableName,regionStartKey,regionId`）的md5 hash。根据rowkey可以找到相应region在hdfs中的位置：`/<hbaseRootDir>/<tableName>/<encodedRegionName>/<columnFamily>/<fileName>`。fileName是基于Java内建的随机数生成器产生的任意数字。
 
 每个rowkey在info列族有[如下列](https://github.com/apache/hbase/blob/master/hbase-client/src/main/java/org/apache/hadoop/hbase/MetaTableAccessor.java)：
 
@@ -53,7 +54,6 @@ info:regioninfo等如何产生？为什么只有reioninfo信息没其他信息�
 如何修复？
 
 ## zookeeper
-在0.96之前的版本中，hbase的meta信息通过-ROOT-表来查询，在0.96.0之后的版本中，移除了-ROOT-表，.meta.被重重命名为hbase:meta，并且其位置存储在zookeeper中。
 
 
 ## 参考
