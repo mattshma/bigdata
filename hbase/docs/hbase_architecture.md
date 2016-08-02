@@ -41,7 +41,7 @@ HBase有如下特性：
 ## Architecture
 引用的一张图：
 
-![hbase_arch](img/hbase_arch.png)
+![hbase_arch](../img/hbase_arch.png)
 
 每个HRegionServer共享一个WAL，HRegionServer有一个或多个Region构成，每个Region下又有一个或多个Store，每个表的列族对应一个Store实例，每个Store包括一个或多个StoreFile实例，StoreFile为HBase实际存储文件HFile的封装，每个Store对应一个MemStore。HFile由多个Block组成。
 
