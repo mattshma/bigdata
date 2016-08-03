@@ -17,7 +17,7 @@ rowkey2
 rowkey3
 ```
 
-若不能很好的预测分区，可使用HBase自带的pre-split算法--[HexStringSplit](https://hbase.apache.org/devapidocs/org/apache/hadoop/hbase/util/RegionSplitter.HexStringSplit.html)和(UniformSplit)[https://hbase.apache.org/devapidocs/org/apache/hadoop/hbase/util/RegionSplitter.UniformSplit.html]。如果rowkey使用十六进制作为前缀，可以使用HexStringSplit，如
+若不能很好的预测分区，可使用HBase自带的pre-split算法--[HexStringSplit](https://hbase.apache.org/devapidocs/org/apache/hadoop/hbase/util/RegionSplitter.HexStringSplit.html)和[UniformSplit](https://hbase.apache.org/devapidocs/org/apache/hadoop/hbase/util/RegionSplitter.UniformSplit.html)。如果rowkey使用十六进制作为前缀，可以使用HexStringSplit，如
 
 ```
 hbase org.apache.hadoop.hbase.util.RegionSplitter pre_split_table HexStringSplit -c 10 -f f1
