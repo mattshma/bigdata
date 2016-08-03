@@ -17,5 +17,6 @@
 - [BloomFilter](hbase_filter.md)
 
 #### Chapter 3
+- [Region In Transcation分析](hbase_rit.md)
 - [RegionServer分析](hbase_regionserver.md)
 - [Region分析](hbase_region.md)

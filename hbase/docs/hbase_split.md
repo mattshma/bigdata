@@ -75,5 +75,10 @@ org.apache.hadoop.hbase.regionserver.RegionSplitPolicy
 - RegionServer更新Zookeeper中`/hbase/region-in-transition/region-name`的状态为Split，Master节点获取该状态，若有必要的话，balancer可能将子region迁移到其他RegionServer。此时split完成。
 - split完成后，hbase:meta和hdfs中仍会在父region中保存引用文件，这些引用文件会在子region进行compaction时被删除。Master的垃圾回收任务会周期性的检查子region明是否还在引用父region，若没有，则父region被移除。
 
+### 测试
+在测试集群上自动split，观察log。
+
+
 ## 参考
 - [APACHE HBASE REGION SPLITTING AND MERGING](http://zh.hortonworks.com/blog/apache-hbase-region-splitting-and-merging/)
+- [HBase merge and split impact in HDFS](https://ctheu.com/2015/12/24/hbase-merge-and-split-impact-in-hdfs/)
