@@ -427,9 +427,8 @@ void openDaughters(final Server server, final RegionServerServices services, HRe
 ---------|----------|---------------------
 STARTED  | SplitTransaction() | 构造方法。 
 PREPARED | prepare() | - 根据rowkey为两个子Region分别创建HRegionInfo对象。
-BEFORE_PRE_SPLIT_HOOK | createDaughters() | - 由execute调用。 - 确认RS正常。
+BEFORE_PRE_SPLIT_HOOK | createDaughters() | <ul> <li>由execute调用。</li> <li>确认RS正常。</li></ul>
 AFTER_PRE_SPLIT_HOOK |           |  - 11
-                        |           |   - 22
 SET_SPLITTING |                  |
 CREATE_SPLIT_DIR |       |
 CLOSED_PARENT_REGION |  | 
