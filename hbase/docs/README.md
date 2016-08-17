@@ -15,8 +15,11 @@
 #### Chapter 2
 - [Index](hbase_index.md)
 - [BloomFilter](hbase_filter.md)
+- [Comprosser](hbase_compressor.md)
+- [HBase中的锁](hbase_lock.md)
 
 #### Chapter 3
-- [Region In Transcation分析](hbase_rit.md)
-- [RegionServer分析](hbase_regionserver.md)
-- [Region分析](hbase_region.md)
+- [Region In Transcation分析](hbase_sc_rit.md)
+- [RegionServer分析](hbase_sc_regionserver.md)
+- [Region分析](hbase_sc_region.md)
+- [Split分析](hbase_sc_split.md)
