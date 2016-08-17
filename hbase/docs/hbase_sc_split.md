@@ -423,24 +423,23 @@ void openDaughters(final Server server, final RegionServerServices services, HRe
 
 整个Split事务见下表：
 
- Phase  |  Function |  Description 
----------|----------|---------------------
-STARTED  | SplitTransaction() | 构造方法。 
-PREPARED | prepare() | - 根据rowkey为两个子Region分别创建HRegionInfo对象。
-BEFORE_PRE_SPLIT_HOOK | createDaughters() | <ul> <li>由execute调用。</li> <li>确认RS正常。</li></ul>
-AFTER_PRE_SPLIT_HOOK |           |  - 11
-SET_SPLITTING |                  |
-CREATE_SPLIT_DIR |       |
-CLOSED_PARENT_REGION |  | 
-OFFLINED_PARENT |  |         
-STARTED_REGION_A_CREATION |     |
-STARTED_REGION_B_CREATION |  |
-OPENED_REGION_A | |
-OPENED_REGION_B | |
-PONR |  |
-BEFORE_POST_SPLIT_HOOK |  |
-AFTER_POST_SPLIT_HOOK | |
-COMPLETED | |
+ Phase  |  Function | Description 
+---------|----------|--------------------
+STARTED  | SplitTransaction() |  <ul><li>构造方法。</li></ul>
+PREPARED | prepare() |  <ul><li>根据rowkey为两个子Region分别创建HRegionInfo对象。</li></ul>
+BEFORE_PRE_SPLIT_HOOK | createDaughters() | <ul> <li>由execute()调用。</li> <li>确认RS正常。</li></ul>
+AFTER_PRE_SPLIT_HOOK | createDaughters() |<ul></li>完成为preSplit加coprocessor hook。</li></ul>
+SET_SPLITTING | stepsBeforePONR() | <ul><li>由createDaughters()调用</li><li>为指定region在zk中创建一个PENDING_SPLIT状态的临时目录。</li></ul>
+CREATE_SPLIT_DIR | stepsBeforePONR() |<ul><li>等待master将pending_split状态的目录转变为splitting</li><li>调用getSplitsDir()获取split目录.splits，并创建该目录。</li></ul>
+CLOSED_PARENT_REGION | stepsBeforePONR() | <ul><li>flush该region的memstore后关闭该region。</li></ul>
+OFFLINED_PARENT | stepsBeforePONR() |  <ul><li>在RegionServer的onlineregion中删除该region。</li></ul>
+STARTED_REGION_A_CREATION | stepsBeforePONR() |<ul><li>创建引用文件</li><li>创建子region A。</li></ul>
+STARTED_REGION_B_CREATION | stepsBeforePONR() | <ul><li>创建子region B。</li></ul>
+PONR | createDaughters() |<ul><li>stepsBeforePONR()执行结束，回到createDaughters()。</li><li>Point Of No Return。该阶段之后的事务无法恢复，若出现错误，只能让RS挂掉，接着master ServerShutdownHandler 修复子region以防止数据丢失。在进入该阶段前会先调用preSplitBeforePONR()增加hook。</li></ul>
+OPENED_REGION_A | openDaughters() |<ul><li>execute()调用stepsAfterPONR()，stepsAfterPONR()再调用openDaughters()</li><li>检查RS是否正常，若正常，则并行打开RegionA和RegionB</li><li></li></ul>
+OPENED_REGION_B | openDaughters() |<ul><li>该阶段后，根据HBASE-4335，先更新zk中region B。</li><li>将region B加入onlineregion。</li><li>更新zk中region A，再将其加入onlineregion。</li></ul>
+BEFORE_POST_SPLIT_HOOK | stepsAfterPONR() |<ul><li>调用完openDaughters()后，返回stepsAfterPONR()</li><li>调用completeSplitTransaction()，为postSplit加hook前</li></ul>
+AFTER_POST_SPLIT_HOOK | stepsAfterPONR() |<ul><li>调用postSplit()后。</li></ul>
 
 
 
