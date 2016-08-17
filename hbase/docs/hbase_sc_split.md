@@ -111,9 +111,9 @@ public byte[] checkSplit() {
   return ret; 
 } 
   
-  /** 
-  * @return The priority that this region should have in the compaction queue 
-  */ 
+/** 
+* @return The priority that this region should have in the compaction queue 
+*/ 
 public int getCompactPriority() { 
   int count = Integer.MAX_VALUE; 
   for (Store store : stores.values()) { 
@@ -162,7 +162,7 @@ public byte[] getSplitPoint() {
     return this.storeEngine.getStoreFileManager().getSplitPoint(); 
     ... 
     } finally { 
-    this.lock.readLock().unlock(); 
+      this.lock.readLock().unlock(); 
   } 
   return null; 
 } 
@@ -423,8 +423,27 @@ void openDaughters(final Server server, final RegionServerServices services, HRe
 
 整个Split事务见下表：
 
- Phase  |  Function | Code  |  Description 
----------|----------|--------|--------------
-STARTED  | SplitTransaction构造方法 | ```        |
-         |                          | aaa        |  
-         |                          | ```     |
+ Phase  |  Function |  Description 
+---------|----------|---------------------
+STARTED  | SplitTransaction() | 构造方法。 
+PREPARED | prepare() | - 根据rowkey为两个子Region分别创建HRegionInfo对象。
+BEFORE_PRE_SPLIT_HOOK | createDaughters() | - 由execute调用。 - 确认RS正常。
+AFTER_PRE_SPLIT_HOOK |           |  - 11
+                        |           |   - 22
+SET_SPLITTING |                  |
+CREATE_SPLIT_DIR |       |
+CLOSED_PARENT_REGION |  | 
+OFFLINED_PARENT |  |         
+STARTED_REGION_A_CREATION |     |
+STARTED_REGION_B_CREATION |  |
+OPENED_REGION_A | |
+OPENED_REGION_B | |
+PONR |  |
+BEFORE_POST_SPLIT_HOOK |  |
+AFTER_POST_SPLIT_HOOK | |
+COMPLETED | |
+
+
+
+
+
