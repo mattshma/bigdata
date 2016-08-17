@@ -61,24 +61,27 @@ org.apache.hadoop.hbase.regionserver.RegionSplitPolicy
 
 
 ## Split过程
-整个过程参考[APACHE HBASE REGION SPLITTING AND MERGING](http://zh.hortonworks.com/blog/apache-hbase-region-splitting-and-merging/)，以下稍微说下：
+整个过程参考[RegionServer Splitting Implementation](https://github.com/apache/hbase/blob/master/src/main/asciidoc/_chapters/architecture.adoc#65-regionserver-splitting-implementation)，以下稍微说下：
 
-- RegionServer决定split region。在Zookeeper中创建znode`/hbase/region-in-transition/region-name`，状态为Splitting。
+![region_split_process.png](https://github.com/apache/hbase/blob/master/src/main/site/resources/images/region_split_process.png)
+
+- RegionServer决定split region，启动split事务。RegionServer先获取表的共享读锁，以免split过程中表结构变化。接着在Zookeeper中创建znode`/hbase/region-in-transition/region-name`，并将该znode的状态设为Splitting。
 - 由于Master监听`/hbase/region-in-transition`目录，因此知道该region需要做split。
 - RegionServer在hdfs中该region目录下创建`.splits`子目录。
-- RegionServer关闭该region，强制flush memstore，并在RegionServer中将该region标记为offline状态，如果此时客户端刚好请求该region，会抛出NotServingRegionException异常。此时客户端会重试。
-- RegionServer在`.splits`目录下分别为两个子region创建目录和必要的数据结构，然后创建两个引用文件指向该region（即子region的父region）。
-- RegionServer在hdfs中创建region目录，并将引用文件移到对应目录下。
+- RegionServer关闭该region，强制flush memstore，并在RegionServer中将该region标记为offline状态，如果此时客户端刚好请求该region，会抛出NotServingRegionException异常，之后客户端会重试。
+- RegionServer在`.splits`目录下分别为两个子region创建目录和必要的数据结构，然后创建两个引用文件指向该region（即子region的父region）中的文件。
+- RegionServer在hdfs中创建真正的region目录，并将引用文件移到对应目录下。
 - RegionServer发送一个put请求给hbase:meta表，在hbase:meta表将该region标记为offline状态，并将子region信息也加入到hbase:meta中。此时如果scan hbase:meta，会发现该region正在split。如果这个put请求成功，即表示split信息更新成功，若put失败，Master和下次打开该region的RegioinServer会清除这次关于split的脏状态。
 - RegionServer并行打开两个子目录接收写操作。
 - RegionServer在hbase:meta表增加两个子目录的相关信息。此后客户端发现这2个region并清除本地缓存的hbase:meta信息，重新访问hbase:meta并更新本地缓存。
 - RegionServer更新Zookeeper中`/hbase/region-in-transition/region-name`的状态为Split，Master节点获取该状态，若有必要的话，balancer可能将子region迁移到其他RegionServer。此时split完成。
 - split完成后，hbase:meta和hdfs中仍会在父region中保存引用文件，这些引用文件会在子region进行compaction时被删除。Master的垃圾回收任务会周期性的检查子region明是否还在引用父region，若没有，则父region被移除。
 
+
+Split的源码分析见[HBase Split源码分析](hbase_sc_split.md)。
+
 ### 测试
 在测试集群上自动split，观察log。
 
-
 ## 参考
-- [APACHE HBASE REGION SPLITTING AND MERGING](http://zh.hortonworks.com/blog/apache-hbase-region-splitting-and-merging/)
 - [HBase merge and split impact in HDFS](https://ctheu.com/2015/12/24/hbase-merge-and-split-impact-in-hdfs/)
