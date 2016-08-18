@@ -233,7 +233,7 @@ Split事务中的[协同操作](https://github.com/apache/hbase/blob/branch-1.0/
   所有split事务的准备/初始化工作须在此阶段完成。该函数主要作用是在zk中的region-in-transition目录下，根据执行split事务的region的rgion name创建临时目录，并将该目录设为 PENDING_SPLIT 状态。
 - [waitForSplitTransaction](https://github.com/apache/hbase/blob/branch-1.0/hbase-server/src/main/java/org/apache/hadoop/hbase/coordination/ZKSplitTransactionCoordination.java#L135)     
   处理所有和split事务相关的协同工作，并直到这些工作完成为止。该函数主要作用等待master将正在split node的状态从 PENDING_SPLIT 更新为 SPLITTING，如果更新成功，则继续后续操作；否则循环等待直到更新成功或因node不存在或为空抛出异常。若node被删除或不处于PENDING_SPLIT 状态，则终止split。
-- completeSplitTransaction   
+- [completeSplitTransaction](https://github.com/apache/hbase/blob/branch-1.0/hbase-server/src/main/java/org/apache/hadoop/hbase/coordination/ZKSplitTransactionCoordination.java#L204)   
   所有为完成事务相关的操作。在PONR后调用。该函数作用是等待split事务执行结束后，将znode状态变为SPLIT。
 
 下面分析split事务代码将按上述阶段进行。
@@ -442,7 +442,7 @@ void openDaughters(final Server server, final RegionServerServices services, HRe
 STARTED  | SplitTransaction() |  <ul><li>构造方法。</li></ul>
 PREPARED | prepare() |  <ul><li>根据rowkey为两个子Region分别创建HRegionInfo对象。</li></ul>
 BEFORE_PRE_SPLIT_HOOK | createDaughters() | <ul> <li>由execute()调用。</li> <li>确认RS正常。</li></ul>
-AFTER_PRE_SPLIT_HOOK | createDaughters() |<ul></li>完成为preSplit加coprocessor hook。</li></ul>
+AFTER_PRE_SPLIT_HOOK | createDaughters() |<ul><li>完成为preSplit加coprocessor hook。</li></ul>
 SET_SPLITTING | stepsBeforePONR() | <ul><li>由createDaughters()调用</li><li>调用startSplitTransaction()，为指定region在zk中创建一个PENDING_SPLIT状态的临时目录。</li><li>调用waitForSplitTransaction()，等待master将zk中临时目录状态从PENDING_SPLIT更改为SPLITTING。</li></ul>
 CREATE_SPLIT_DIR | stepsBeforePONR() |<ul><li>调用getSplitsDir()获取split目录.splits，并创建该目录。</li></ul>
 CLOSED_PARENT_REGION | stepsBeforePONR() | <ul><li>flush该region的memstore后关闭该region。</li></ul>
