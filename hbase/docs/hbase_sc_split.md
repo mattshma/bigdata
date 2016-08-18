@@ -209,7 +209,7 @@ byte[] getFileSplitPoint(KVComparator comparator) throws IOException {
 - 执行SplitTransaction对象的prepare方法，检查HRegion是否可被Split，并新建2个RegionInfo对象。若prepare成功的话，再执行SplitTransaction对象的execute方法。 
 - 释放表锁。 
 
-再说到split事务（SplitTransaction）时，先看下整个Split事务有哪些[阶段](https://github.com/apache/hbase/blob/branch-1.0/hbase-server/src/main/java/org/apache/hadoop/hbase/regionserver/SplitTransaction.java#L111)： 
+再说split事务（SplitTransaction）时，先看下整个Split事务有哪些[阶段](https://github.com/apache/hbase/blob/branch-1.0/hbase-server/src/main/java/org/apache/hadoop/hbase/regionserver/SplitTransaction.java#L111)： 
 
 - STARTED 
 - PREPARED 
@@ -226,7 +226,15 @@ byte[] getFileSplitPoint(KVComparator comparator) throws IOException {
 - PONR 
 - BEFORE_POST_SPLIT_HOOK 
 - AFTER_POST_SPLIT_HOOK 
-- COMPLETED
+
+Split事务中的[协同操作](https://github.com/apache/hbase/blob/branch-1.0/hbase-server/src/main/java/org/apache/hadoop/hbase/coordination/SplitTransactionCoordination.java#L30)阶段如下：
+
+- [startSplitTransaction](https://github.com/apache/hbase/blob/branch-1.0/hbase-server/src/main/java/org/apache/hadoop/hbase/coordination/ZKSplitTransactionCoordination.java#L50)       
+  所有split事务的准备/初始化工作须在此阶段完成。该函数主要作用是在zk中的region-in-transition目录下，根据执行split事务的region的rgion name创建临时目录，并将该目录设为 PENDING_SPLIT 状态。
+- [waitForSplitTransaction](https://github.com/apache/hbase/blob/branch-1.0/hbase-server/src/main/java/org/apache/hadoop/hbase/coordination/ZKSplitTransactionCoordination.java#L135)     
+  处理所有和split事务相关的协同工作，并直到这些工作完成为止。该函数主要作用等待master将正在split node的状态从 PENDING_SPLIT 更新为 SPLITTING，如果更新成功，则继续后续操作；否则循环等待直到更新成功或因node不存在或为空抛出异常。若node被删除或不处于PENDING_SPLIT 状态，则终止split。
+- completeSplitTransaction   
+  所有为完成事务相关的操作。在PONR后调用。该函数作用是等待split事务执行结束后，将znode状态变为SPLIT。
 
 下面分析split事务代码将按上述阶段进行。
 
@@ -257,7 +265,13 @@ public PairOfSameType<HRegion> execute(final Server server, final RegionServerSe
 public PairOfSameType<HRegion> stepsAfterPONR(final Server server, final RegionServerServices services, final PairOfSameType<HRegion> regions, User user) throws IOException { 
   // 打开子region。
   openDaughters(server, services, regions.getFirst(), regions.getSecond()); 
-  ...... 
+
+  //调用completeSplitTransaction()，将zk中临时目录状态设为SPLIT。
+  if (useCoordinatedStateManager(server)) {
+    ((BaseCoordinatedStateManager) server.getCoordinatedStateManager())
+        .getSplitTransactionCoordination().completeSplitTransaction(services, regions.getFirst(),
+          regions.getSecond(), std, parent);
+  }
   // split事务完成 BEFORE_POST_SPLIT_HOOK 阶段。
   journal.add(new JournalEntry(JournalEntryType.BEFORE_POST_SPLIT_HOOK)); 
   ...... 
@@ -429,17 +443,17 @@ STARTED  | SplitTransaction() |  <ul><li>构造方法。</li></ul>
 PREPARED | prepare() |  <ul><li>根据rowkey为两个子Region分别创建HRegionInfo对象。</li></ul>
 BEFORE_PRE_SPLIT_HOOK | createDaughters() | <ul> <li>由execute()调用。</li> <li>确认RS正常。</li></ul>
 AFTER_PRE_SPLIT_HOOK | createDaughters() |<ul></li>完成为preSplit加coprocessor hook。</li></ul>
-SET_SPLITTING | stepsBeforePONR() | <ul><li>由createDaughters()调用</li><li>为指定region在zk中创建一个PENDING_SPLIT状态的临时目录。</li></ul>
-CREATE_SPLIT_DIR | stepsBeforePONR() |<ul><li>等待master将pending_split状态的目录转变为splitting</li><li>调用getSplitsDir()获取split目录.splits，并创建该目录。</li></ul>
+SET_SPLITTING | stepsBeforePONR() | <ul><li>由createDaughters()调用</li><li>调用startSplitTransaction()，为指定region在zk中创建一个PENDING_SPLIT状态的临时目录。</li><li>调用waitForSplitTransaction()，等待master将zk中临时目录状态从PENDING_SPLIT更改为SPLITTING。</li></ul>
+CREATE_SPLIT_DIR | stepsBeforePONR() |<ul><li>调用getSplitsDir()获取split目录.splits，并创建该目录。</li></ul>
 CLOSED_PARENT_REGION | stepsBeforePONR() | <ul><li>flush该region的memstore后关闭该region。</li></ul>
 OFFLINED_PARENT | stepsBeforePONR() |  <ul><li>在RegionServer的onlineregion中删除该region。</li></ul>
 STARTED_REGION_A_CREATION | stepsBeforePONR() |<ul><li>创建引用文件</li><li>创建子region A。</li></ul>
 STARTED_REGION_B_CREATION | stepsBeforePONR() | <ul><li>创建子region B。</li></ul>
 PONR | createDaughters() |<ul><li>stepsBeforePONR()执行结束，回到createDaughters()。</li><li>Point Of No Return。该阶段之后的事务无法恢复，若出现错误，只能让RS挂掉，接着master ServerShutdownHandler 修复子region以防止数据丢失。在进入该阶段前会先调用preSplitBeforePONR()增加hook。</li></ul>
-OPENED_REGION_A | openDaughters() |<ul><li>execute()调用stepsAfterPONR()，stepsAfterPONR()再调用openDaughters()</li><li>检查RS是否正常，若正常，则并行打开RegionA和RegionB</li><li></li></ul>
+OPENED_REGION_A | openDaughters() |<ul><li>execute()调用stepsAfterPONR()，stepsAfterPONR()再调用openDaughters()</li><li>检查RS是否正常，若正常，则并行打开RegionA和RegionB</li></ul>
 OPENED_REGION_B | openDaughters() |<ul><li>该阶段后，根据HBASE-4335，先更新zk中region B。</li><li>将region B加入onlineregion。</li><li>更新zk中region A，再将其加入onlineregion。</li></ul>
-BEFORE_POST_SPLIT_HOOK | stepsAfterPONR() |<ul><li>调用完openDaughters()后，返回stepsAfterPONR()</li><li>调用completeSplitTransaction()，为postSplit加hook前</li></ul>
-AFTER_POST_SPLIT_HOOK | stepsAfterPONR() |<ul><li>调用postSplit()后。</li></ul>
+BEFORE_POST_SPLIT_HOOK | stepsAfterPONR() |<ul><li>调用完openDaughters()后，返回stepsAfterPONR()</li><li>调用completeSplitTransaction()，将zk中临时目录状态设为SPLIT。</li></ul>
+AFTER_POST_SPLIT_HOOK | stepsAfterPONR() |<ul><li>调用postSplit()后，split事务进入该阶段。</li></ul>
 
 
 
