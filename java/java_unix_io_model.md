@@ -77,9 +77,19 @@ POSIX对于同步I/O和异步I/O的定义如下：
 
 按这个定义，前面四种I/O都是同步I/O模型。只有异步I/O模型是异步I/O。
 
+## Java I/O 模型
 
+当前Java有三个不同的I/O包：
 
+- IO   
+  同步阻塞。基于字节，对于每一个客户端的socket连接都需要一个线程来处理，并且在此期间，该线程会被一直占用。
+- NIO   
+  同步非阻塞，该包中的[java.nio.channels.SelectorProvider](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/spi/SelectorProvider.html)实现基于Linux的epoll机制（多路复用I/O模型）。客户端发送的请求会注册到多路复用器上，多路复用轮询到有I/O请求时会启动一个线程进行处理。NIO基于块。
+- AIO   
+  异步非阻塞。于JDK7发布。客户端发送请求，等操作系统完成相关操作后再通知客户端处理。
 
+关于NIO的内容，见[Java NIO](java_nio.md)。
 
 ## 参考
 - [Chapter 6. I/O Multiplexing: The select and poll Functions](https://notes.shichao.io/unp/ch6/)
+- [Enhancements in Java I/O](https://docs.oracle.com/javase/8/docs/technotes/guides/io/enhancements.html)
