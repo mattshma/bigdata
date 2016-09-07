@@ -1,10 +1,10 @@
 ## Java NIO 
 
-*注：本文主要参考[Java NIO Tutorial](http://tutorials.jenkov.com/java-nio/index.html)*
+*注：本文主要参考[Java NIO Tutorial](http://tutorials.jenkov.com/java-nio/index.html)*。
 
-在JDK1.4之前，Java io主要为阻塞io，其主要分为character streams 和 byte streams，还有其他如Console, File, StreamTokenizer等接口。而character straem又可分为Reader和Writer两类，byte stream分为InputStream和OutputStream。
+在Java SE1.4之前，Java io主要为阻塞io，其主要分为character streams 和 byte streams，还有其他如Console, File, StreamTokenizer等接口。而character straem又可分为Reader和Writer两类，byte stream分为InputStream和OutputStream。
 
-Java IO面向流，每次从流中读取一个或多个字节，并且是阻塞的，因此在JDK1.4之前Java在处理IO方面比较弱，在JDK1.4中引入了nio，其面向块且是非阻塞的，主要分为Buffer, Channel, Selector三块，另外还有charset。这里主要说下NIO方面的内容。
+Java IO面向流，每次从流中读取一个或多个字节，并且是阻塞的，因此在Java SE1.4之前Java在处理IO方面比较弱，在Java SE1.4中引入了nio，其面向块且是非阻塞的，主要分为Buffer, Channel, Selector三块，另外还有charset。这里主要说下NIO方面的内容。
 
 ### NIO概述
 
@@ -31,14 +31,14 @@ Selector允许单线程处理多个Channel。
 - ServerSocketChannel      
   监听新进来的TCP连接，对每个新进来的连接都会创建一个SocketChannel。
 
-Java NIO支持scatte/gather，scatter从Channel中读取指将读取的数据写入多个Buffer中。gatter写入Channel指将多个Buffer的数据写入同一个Channel。Channel间数据可以通过transferFrom()和trasferTo()互相传输。
+Java NIO支持scatte/gather，scatter从Channel中读取指将读取的数据写入多个Buffer中。gatter写入Channel指将多个Buffer的数据写入同一个Channel。Channel间数据可以通过`transferFrom()`和`transferTo()`互相传输。
 
 ### Buffer
 使用Buffer读写数据，一般遵循如下四个步骤：
 - 写数据到Buffer
-- 调用flip()将Buffer从写模式切到读模式。
+- 调用`flip()`将Buffer从写模式切到读模式。
 - 从Buffer中读取数据。
-- 调用clear()或compact()清空缓冲区。clear()清空整个缓冲区，compact()只清除已经读过的数据。
+- 调用`clear()`或`compact()`清空缓冲区。`clear()`清空整个缓冲区，`compact()`只清除已经读过的数据。
 
 Buffer有三个属性：
 - capacity
