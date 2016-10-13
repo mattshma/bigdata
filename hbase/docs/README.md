@@ -13,14 +13,22 @@
 - [Zookeeper](hbase_zookeeper.md)
 
 #### Chapter 2
+- [Reading Data from HBase](read_data_from_hbase.md)
+- [Writing Data to HBase](write_data_to_hbase.md)
+- [Importing Data into HBase](import_data_into_hbase.md)
+
+#### Chapter 3
 - [Index](hbase_index.md)
 - [BloomFilter](hbase_filter.md)
 - [Comprosser](hbase_compressor.md)
 - [HBase中的锁](hbase_lock.md)
 
-#### Chapter 3
+#### Chapter 4
 - [Region In Transcation分析](hbase_sc_rit.md)
 - [RegionServer分析](hbase_sc_regionserver.md)
 - [Region分析](hbase_sc_region.md)
 - [Split分析](hbase_sc_split.md)
 - [ConnectionCache](hbase_sc_connectioncache.md)
+
+#### Chapter 5
+- [HBase优化](https://github.com/mattshma/hbase/blob/master/src/main/asciidoc/_chapters/performance.adoc)
