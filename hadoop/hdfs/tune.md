@@ -25,7 +25,7 @@ AM使用内存由`yarn.app.mapreduce.am.resource.mb`指定，AM的JVM的内存�
 ### 整合
 上面从几个点讲了内存的相关参数，这里引用[MapReduce YARN Memory Parameters](https://support.pivotal.io/hc/en-us/articles/201462036-MapReduce-YARN-Memory-Parameters)的一张图，整合上述几个参数。
 
-![Copy_of_Yarn_mem_params.jpg](../../img/Copy_of_Yarn_mem_params.jpg)
+![Copy_of_Yarn_mem_params.jpg](../img/Copy_of_Yarn_mem_params.jpg)
 
 RM每次分配给container的最小内存为1GB，AM会将每次申请的内存大小（`mapreduce.map/reduce.memory.mb`）进行调整，每次调整的内存大小为`yarn.scheduler.increment-allocation-mb`（在Fair Scheduler中，该值默认为512MB）* n+`mapreduce.map/reduce.memory.mb`，即若map container设置的内存（`mapreduce.map.memory.mb`）为1001MB，AM将从RM申请1GB+512MB=1.5GB，若map container申请的内存为1.G，AM将向RM申请1GB+512MB*2=2G。
 
