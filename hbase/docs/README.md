@@ -14,14 +14,16 @@
 
 #### Chapter 2
 - [Reading Data from HBase](read_data_from_hbase.md)
+- [HBase Filter](hbase_filter.md)
 - [Writing Data to HBase](write_data_to_hbase.md)
 - [Importing Data into HBase](import_data_into_hbase.md)
 
 #### Chapter 3
-- [Index](hbase_index.md)
-- [BloomFilter](hbase_filter.md)
+- [HBase二级索引](hbase_secondary_index.md)
+- [BloomFilter](hbase_bloom_filter.md)
 - [Comprosser](hbase_compressor.md)
 - [HBase中的锁](hbase_lock.md)
+- [HBase TimeOut](hbase_timeout.md)
 
 #### Chapter 4
 - [Region In Transcation分析](hbase_sc_rit.md)

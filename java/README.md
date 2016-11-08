@@ -5,7 +5,7 @@
 - [动态代理](dynamicProxy.md)
 - [Java与unix的I/O模型](java_unix_io_model.md)
 - [Java NIO](java_nio.md)
-- [RPC介绍](java_rpc.md)
+- [RPC介绍](rpc.md)
 
 ## Demo目录
 - [动态代理](demos/d1)
