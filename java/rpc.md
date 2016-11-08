@@ -25,7 +25,7 @@ Nelson指出实现RPC的程序包括如下5个理论部分：
 
 如图：
 
-![component](img/rpc/rpc-component.svg)
+![component](img/rpc/rpc-component.jpg)
 
 ## 参考
 - [Implementing Remote Procedure Calls](http://birrell.org/andrew/papers/ImplementingRPC.pdf)
