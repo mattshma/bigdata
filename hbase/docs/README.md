@@ -10,6 +10,7 @@
 - [HFile](hbase_hfile.md)
 - [Compaction](hbase_compaction.md)
 - [Split](hbase_split.md)
+- [Merge](hbase_merge.md)
 - [Zookeeper](hbase_zookeeper.md)
 
 #### Chapter 2
