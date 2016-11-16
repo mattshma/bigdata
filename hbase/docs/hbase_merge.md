@@ -19,16 +19,16 @@ hbase> merge_region 'ENCODED_REGIONNAME', 'ENCODED_REGIONNAME'
 hbase> merge_region 'ENCODED_REGIONNAME', 'ENCODED_REGIONNAME', true
 ```
 
-相邻的Region可通过 http://<hmaster>:60010/table.jsp?name=<tableName> 查看。
+相邻的Region可通过 `http://<hmaster>:60010/table.jsp?name=<tableName>` 查看。
 
 如：
 
-```
+<pre>
 Name								Region Server	Start Key	End Key		Requests
 test_log,,1470393748259.9d94fd501cdde185706d973efd72ad14.	dn001:60020			10000		0
 test_log,10000,1444717329683.5f9447eca0b365bc0f751ea7ae01c9dd.	dn002:60020	10000		20000		0
 test_log,20000,1470393744988.aa6f87b1098919eda3a8c0b649d25b88.	dn003:60020	20000				0
-```
+</pre>
 
 Region Name格式为`<table>,<start key>,<timestamp>.<encoded RegionName>`。
 
@@ -158,7 +158,7 @@ hbase(main):041:0> catalogjanitor_run
 ```
 
 ## 批量merge
-对于16000多个Region，手动去merge显然是不现实的，以下是我写的一个程序用于merge大量region。注意，在merge过程中，会造成大量网络I/O和磁盘I/O，降低读性能，并可能会阻塞写，因此最好在业务低峰期merge。
+对于16000多个Region，手动去merge显然是不现实的，以下是我写的一个程序用于merge大量region（每次运行合并减少一半Region）。注意，在merge过程中，会造成大量网络I/O和磁盘I/O，降低读性能，并可能会阻塞写，因此最好在业务低峰期merge。
 
 ```java
 import java.util.List;
@@ -176,12 +176,12 @@ public class MergeRegion {
 
     public static void main(String[] args) {
         Configuration conf = HBaseConfiguration.create();
-        conf.set("hbase.master", "10.2.96.36:60000");
-        conf.set("hbase.zookeeper.quorum", "10.2.72.24, 10.2.72.26, 10.2.72.29");
+        conf.set("hbase.master", "IP:60000");
+        conf.set("hbase.zookeeper.quorum", "ZookServerIp");
         
         try {
             HBaseAdmin admin = new HBaseAdmin(conf);
-            List<HRegionInfo> regions = admin.getTableRegions(TableName.valueOf("snsgz_log"));
+            List<HRegionInfo> regions = admin.getTableRegions(TableName.valueOf("TABLE"));
             Collections.sort(regions, new Comparator<HRegionInfo>() {
                 public int compare(HRegionInfo r1, HRegionInfo r2) {
                     return Bytes.compareTo(r1.getStartKey(), r2.getStartKey());
@@ -212,9 +212,7 @@ Network I/O
 Region Number
 ![Region num](../img/merge_region_num.png)
 
-
-
-
+## 参考
 - [HBASE-8189](https://issues.apache.org/jira/browse/HBASE-8189)
 - [HBase Online Merge](https://www.cloudera.com/documentation/enterprise/5-7-x/topics/cdh_ig_hbase_online_merge.html)
 - [HBASE-4255](https://issues.apache.org/jira/browse/HBASE-4255)
