@@ -3,7 +3,7 @@
 
 ## Todo
 - [HDFS小文件问题]
-- [RPC分析]
+- [RPC分析](java/rpc.md)
 
 ## Passages:
 

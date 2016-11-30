@@ -13,7 +13,7 @@ HDFS 和 Map/Reduce 都具备机架感知能力。
 
 若整个集群的拓扑图如下(图来自于参考1。D代表datacenter, 数据中心的意思)：
 
-![rack_topology.png](../../img/rack_topology.png)
+![rack_topology.png](../img/rack_topology.png)
 
 其中 R1 的位置为 /D1/R1，H8的位置为 /D2/R3/H8，R3 为 H8 的父节点。
 
