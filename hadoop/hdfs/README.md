@@ -6,3 +6,4 @@
 - [Hadoop调优](tune.md)
 - [Hadoop压缩](hdfs_compress.md)
 - [Hadoop权限](acl.md)
+- [Hadoop Recovery](hadoop_recovery.md)
