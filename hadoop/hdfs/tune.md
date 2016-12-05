@@ -81,7 +81,7 @@ block是物理块，split是逻辑块。一个split对应一个map输入。split
 参见[Hadoop Rebalance](rebalance.md)，调整`dfs.balance.bandwidthPerSec`为50MB，在datanode的hdfs-site.xml中设置`dfs.datanode.balance.max.concurrent.moves`为100。
 
 ### 压缩
-配置lzo压缩，见[压缩](压缩.md)。
+配置lzo压缩，见[压缩](compression.md)。
 
 ### HA
 HDFS和Yarn的HA都需开启。
