@@ -7,6 +7,6 @@
 
 ## Passages:
 
-- [压缩](hadoop/hdfs/压缩.md)
+- [压缩](hadoop/hdfs/compression.md)
 - [集群调优](hadoop/hdfs/tune.md)
 
