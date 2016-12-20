@@ -78,13 +78,29 @@ export HADOOP_PREFIX=/root/software/hadoop-2.3.0-cdh5.1.2
 
 ```
 <configuration>
+    <!-- 设置nameserive -->
     <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://10.10.9.52</value>
+        <value>hdfs://my_nameservice</value>
     </property>
     <property>
         <name>hadoop.tmp.dir</name>
-        <value>/home/mingma/software/hadoop-2.3.0-cdh5.1.2/data/hadoop/tmp</value>
+        <value>file:///opt/hadoop/data/hadoop/tmp</value>
+    </property>
+   <!-- 添加lzo等-->
+    <property>
+        <name>io.compression.codecs</name>
+        <value>org.apache.hadoop.io.compress.DefaultCodec,com.hadoop.compression.lzo.LzopCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compress.DeflateCodec,org.apache.hadoop.io.compress.SnappyCodec,org.apache.hadoop.io.compress.Lz4Codec</value>
+    </property>
+    <!--  设置http user为yarn，用以查看日志 -->
+    <property>
+         <name>hadoop.http.staticuser.user</name>
+         <value>yarn</value>
+    </property>
+    <!-- 开启回收站，设置为7天 -->
+    <property>
+         <name>fs.trash.interval</name>
+         <value>10080</value>
     </property>
 </configuration>
 ```
@@ -101,21 +117,63 @@ export HADOOP_PREFIX=/root/software/hadoop-2.3.0-cdh5.1.2
 ```
 <configuration>
     <property>
-    <name>dfs.replication</name>
-    <value>2</value>
+      <name>dfs.nameservices</name>
+      <value>youzu-spark</value>
     </property>
     <property>
-        <name>dfs.namenode.name.dir</name>
-        <value>/home/mingma/software/hadoop-2.3.0-cdh5.1.2/data/hadoop/namedir</value>
+      <name>dfs.namenode.name.dir</name>
+      <value>file:///data/dfs/nn</value>
     </property>
     <property>
-        <name>dfs.datanode.data.dir</name>
-        <value>/home/mingma/software/hadoop-2.3.0-cdh5.1.2/data/hadoop/datadir</value>
+      <name>dfs.datanode.data.dir</name>
+      <value>file:///data/dfs/dn</value>
+    </property>
+    <property>
+      <name>dfs.journalnode.edits.dir</name>
+      <value>file:///data/dfs/jn</value>
+    </property>
+    <property>
+      <name> dfs.namenode.checkpoint.dir</name>
+      <value>file:///hadoop/dfs/snn</value>
+    </property>
+    <property>
+      <name>dfs.replication</name>
+      <value>3</value>
+    </property>
+    <property>
+      <name>dfs.datanode.balance.bandwidthPerSec</name>
+      <value>104857600</value>
+    </property>
+    <property>
+      <name>dfs.namenode.handler.count</name>
+      <value>256</value>
+    </property>
+    <property>
+      <name>dfs.datanode.handler.count</name>
+      <value>256</value>
+    </property>
+    <property>
+      <name>dfs.datanode.max.transfer.threads</name>
+      <value>10240</value>
+    </property>
+    <!-- shortcirruit -->
+    <property>
+      <name>dfs.client.read.shortcircuit</name>
+      <value>true</value>
+    </property>
+    <property>
+      <name>dfs.domain.socket.path</name>
+      <value>/var/run/hdfs-sockets/dn</value>
+    </property>
+    <!-- 选择磁盘策略 -->
+    <property>
+      <name>dfs.datanode.fsdataset.volume.choosing.policy</name>
+      <value>org.apache.hadoop.hdfs.server.datanode.fsdataset.AvailableSpaceVolumeChoosingPolicy</value>
     </property>
 </configuration>
 ```
 
-在 `$HADOOP_PREFIX/data/hadoop` 下面新建 datadir, namedir 两个目录。
+若需要设置Namenode和Datanode的堆大小，可在hadoop-env.sh中设置。
 
 ### 格式化HDFS文件系统  
 在使用Hadoop，先格式化一个新的HDFS安装。输入命令`hadoop namdenode -format`即可。
