@@ -7,7 +7,7 @@
 先yum安装如下包：
 `yum -y install openssl-devel zlib-devel pcre-devel`，若yum中没有相关源，需依次下载并安装[ssl](http://www.openssl.org/source/)，[zlib](http://zlib.net/)，[pcre](http://www.pcre.org/)，[substitutions](https://github.com/yaoweibin/ngx_http_substitutions_filter_module)。
 
-对于部分环境，可能还需要安装perl的几个包：`yum -y perl-devel perl-ExtUtils-Embed`。
+对于部分环境，可能还需要安装perl的几个包：`yum -y install perl-devel perl-ExtUtils-Embed`。
 ### 编译并安装 nginx
 如下：
 ```
