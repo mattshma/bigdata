@@ -51,18 +51,26 @@ shell> ln -s /opt/mysql-VERSION-OS mysql
 shell> cd /opt
 shell> chown -R mysql:mysql mysql
 shell> cd mysql
-shell> scripts/mysql_install_db --user=mysql
 # mysql.cnf自定义好
 shell> cp support-files/my-medium.cnf /etc/my.cnf
+shell> scripts/mysql_install_db --user=mysql
 shell> bin/mysqld_safe --user=mysql &
 # Next command is optional
 shell> cp support-files/mysql.server /etc/init.d/mysqld
+shell> /opt/mysql//bin/mysqladmin -u root password 'new-password'
+```
+进入mysql中，设置root密码，并删除密码为空的帐号，添加用户，如hadoop用户：
+```
+mysql> create user hadoop identified by 'hadoop';
+mysql> create database hive;
+mysql> grant all privileges on hive.* to hadoop@'%' identified by 'hadoop';
+mysql> flush privileges;
 ```
 
 ### 安装cloudera
 在机器A上安装执行`cloudera-manager-installer.bin`后，安装cloudera-manager-server后，为其设置数据库，默认为自带的pg，正式环境中，需要其替换掉，这里以MySQL为例，说下过程。
 
-- 在MySQL中建立scm的库，用户名，然后执行`/usr/share/cmf/schema/scm_prepare_database.sh -h <MySQL_ip> mysql <DB> <Username> <Password>`，执行完后，在`/etc/cloudera-scm-server/db.properties`中可以看到信息，执行`/etc/init.d/cloudera-scm-server`。
+- 在MySQL中建立scm的库，用户名，然后执行`/usr/share/cmf/schema/scm_prepare_database.sh -h <MySQL_ip> mysql <DB> <Username> <Password>`，执行完后，在`/etc/cloudera-scm-server/db.properties`中可以看到信息，执行`/etc/init.d/cloudera-scm-server restart`。
 
 - 在浏览器中输入 http://<A_ip>:7180，选择Cloudera Express版本。然后一步步安装即可。
 
@@ -70,7 +78,7 @@ shell> cp support-files/mysql.server /etc/init.d/mysqld
 #### HDFS
 - 添加lzo压缩。        
   `io.compression.codecs`添加`com.hadoop.compression.lzo.LzopCodec`。
-- 开启tarsh功能。      
+- 开启trash功能。      
   `fs.trash.interval`调整为7天。
 - core-site.xml添加配置。    
   如下：
