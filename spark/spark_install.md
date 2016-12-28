@@ -111,6 +111,7 @@ mysql> flush privileges;
 - 开启uber task：`mapreduce.job.ubertask.enable`开启。
 - 设置`yarn.nodemanager.resource.memory-mb`和`yarn.nodemanager.resource.cpu-vcores`。
 - 设置`mapreduce.map.memory.mb`，`mapreduce.map.cpu.vcores`，`mapreduce.reduce.memory.mb`和`mapreduce.reduce.cpu.vcores`。
+- 设置yarn-site.xml中的`yarn.nodemanager.aux-services`，值为`spark_shuffle,mapreduce_shuffle`，设置`yarn.nodemanager.aux-services.spark_shuffle.class`，值为`org.apache.spark.network.yarn.YarnShuffleService`。
 - 开启HA
 
 ### 安装spark
@@ -203,7 +204,7 @@ Caused by: org.apache.hadoop.yarn.exceptions.InvalidAuxServiceException: The aux
 
 参考[Spark Configuration](http://spark.apache.org/docs/latest/job-scheduling.html#configuration-and-setup)，步骤如下：
 
-- 将/opt/spark/yarn目录下的spark-2.0.2-yarn-shuffle.jar拷贝至/opt/cloudera/parcels/CDH/lib/hadoop-yarn/lib目录下。并删除CDH已有的spark-<version>-cdh<version>-yarn-shuffle.jar文件。对spark-2.0.2-yarn-shuffle.jar做软链，名称为spark-yarn-shuffle.jar。
+- 将/opt/spark/yarn目录下的spark-2.0.2-yarn-shuffle.jar拷贝至各nodemanger的/opt/cloudera/parcels/CDH/lib/hadoop-yarn/lib目录下。并删除CDH已有的spark-<version>-cdh<version>-yarn-shuffle.jar文件。对spark-2.0.2-yarn-shuffle.jar做软链，名称为spark-yarn-shuffle.jar。
 - 修改yarn-site.xml，添加如下配置：
 ```
 <property>
