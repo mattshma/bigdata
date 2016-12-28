@@ -55,4 +55,4 @@ Running setup.py install for SciPy ... error
 可先将依赖安装好，或安装较高版本的scipy：`pip install --upgrade SciPy==0.10`，然后再安装sklearn。
 
 
-** UPDATE:发现CDH提供了这些包，在Remote Parcel Repository URLs中添加`https://repo.continuum.io/pkgs/misc/parcels/`，下载发布即可。**
+** UPDATE **：发现CDH提供了这些包，在Remote Parcel Repository URLs中添加`https://repo.continuum.io/pkgs/misc/parcels/`，下载发布，修改/etc/bashrc，添加`export PATH=/opt/cloudera/parcels/Anaconda/bin:$PATH`。
