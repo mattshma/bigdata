@@ -66,6 +66,7 @@ appender都有如下通用属性：
  filter   | filter在级别基础上分析日志信息，来过滤某些日志记录
 
 对于较常见的FileAppender，其还有如下属性：
+
   属性   | 描述
 ---------|------------
  immediateFlush | 每条日志立即刷新到文件中，默认为true
@@ -105,11 +106,13 @@ HTMLLayout是一种很简单的Layout对象，其有如下属性：
  ContentType | 设置HTML的内容类型，默认为text/html
 
 PatternLayout是最常用的Layout对象，其属性如下：
+
   属性   | 描述
 ---------|----------
  conversionPattern | 设置转换模式，设置为`%r [%t] %p %c %x - %m%n`
 
 关于模式转换字符，含义如下：
+
  转换字符  | 含义
 -----------|---------
   c      | 为输出日志事件分类，允许使用%c{数字}进行分类（从右往左数），对于分类`a.b.c`，`%c` 输出`a.b.c`，`%c{1}`输出`c`
