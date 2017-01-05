@@ -7,8 +7,8 @@ ls的权限位输出以+结束时，那么该文件或目录正在启用一个AC
 
 ```
 <property>
-<name>dfs.namenode.acls.enabled</name>
-<value>true</value>
+  <name>dfs.namenode.acls.enabled</name>
+  <value>true</value>
 </property>
 ```
 
@@ -26,6 +26,39 @@ hdfs dfs -setfacl -x user:ma /user/hive/warehouse/test.db
 hdfs dfs -setfacl -m default:group:ma:r-x /user/hive/warehouse/test.db
 ```
 
+### mask
+mask限定了用户能拥有的最大权限，即在不改变ACL定义的基础上，通过修改mask来提高/降低安全级别，如下：
+```
+# hdfs dfs -getfacl /user/mam
+# file: /user/mam
+# owner: mam
+# group: mam
+user::rwx
+group::rwx
+mask::rwx
+other::r-x
+default:user::rwx
+default:user:bob:rwx
+default:group::rwx
+default:mask::rwx
+default:other::r-x
+
+# hdfs dfs -getfacl /user/mam/test
+# file: /user/mam/test
+# owner: mam
+# group: mam
+user::rwx
+user:bob:rwx    #effective:r-x
+group::rwx    #effective:r-x
+mask::r-x
+other::r-x
+default:user::rwx
+default:user:bob:rwx
+default:group::rwx
+default:mask::rwx
+default:other::r-x
+```
+从上可以看到，对于用户bob而言，即使acl设置了为rwx，但由于mask为r-x，所以实际权限仍为r-x。
 
 ### Group Mapping
 给定一个用户，通过group mapping服务，可得到该用户的属组，该服务由`hadoop.security.group.mapping`参数决定，默认情况下，该属性值为`org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback`，即若JNI可用，通过JNI调用api来获取属组信息，若JNI不可用，该属性值为`org.apache.hadoop.security.ShellBasedUnixGroupsMapping`，即linux下的属组。当然，该属性值也可设置为`org.apache.hadoop.security.LdapGroupsMapping`来通过LDAP来获取属组信息。
