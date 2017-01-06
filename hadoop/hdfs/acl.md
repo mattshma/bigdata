@@ -63,7 +63,7 @@ default:other::r-x
 ### Group Mapping
 给定一个用户，通过group mapping服务，可得到该用户的属组，该服务由`hadoop.security.group.mapping`参数决定，默认情况下，该属性值为`org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback`，即若JNI可用，通过JNI调用api来获取属组信息，若JNI不可用，该属性值为`org.apache.hadoop.security.ShellBasedUnixGroupsMapping`，即linux下的属组。当然，该属性值也可设置为`org.apache.hadoop.security.LdapGroupsMapping`来通过LDAP来获取属组信息。
 
-对于HDFS而言，**用户与属组的对应关系需在NameNode上体现**，即若希望指定用户的属组，需要在NN上做调整。
+对于HDFS而言，**用户与属组的对应关系需在NameNode上体现**，即若希望指定用户的属组，需要在NN上做调整，若使用YARN，还需要在RM上做调整。
 
 
 ### 案例
