@@ -78,7 +78,7 @@ sqoop import --connect jdbc:mysql://192.168.1.2/test_db --username readonly --pa
 
 
 ## 多个表导入Hive
-`sqoop-import`支持增量导表，若要将多个表结构相同的表导入到Hive，可使用`--append`导入。`--append`还适用分次导表的情况，如第一次根据`where`条件导入表A的一部分数据后，第二次再根据`where`条件`--append`数据到hive表中。但由于目前`--append`只能用于导hdfs数据，在hive中时不能使用该命令，即一般使用`--append`的命令为`sqoop import --connect jdbc:mysql://<ip>:<port>/<DB> --username <UserName> --password <Password> --table <TableName> --append --target-dir /user/hive/warehouse/<DataBase>/<TableName>  --null-string '\\N' --null-non-string '\\N' -m 32 --where 'XXXXX'`。
+如果多个表结构相同的表导入Hive，仍可使用`--hive-import`导入一个hive表，若出现重复数据，可能需要指定mapper数为1。当然，也可直接通过`--append`导入HDFS文件，`--append`还适用分次导表的情况，如第一次根据`where`条件导入表A的一部分数据后，第二次再根据`where`条件`--append`数据到表中。由于`--append`不会将mysql中的数据分字段，所以若hive表不以默认分隔符分隔，需在使用`--append`时指定`--fields-terminated-by`和`--lines-terminated-by`。当前`--append`只能用于导hdfs数据，在`hive-import`中时不能使用该命令，即一般使用`--append`的命令为`sqoop import --connect jdbc:mysql://<ip>:<port>/<DB> --username <UserName> --password <Password> --table <TableName> --append --target-dir /user/hive/warehouse/<DataBase>/<TableName>  --null-string '\\N' --null-non-string '\\N' -m 32 --where 'XXXXX'`。
 
 ## 库中所有表导入Hive
 若要导入某一数据库中的所有表，可使用`sqoop import-all-tables`，`import-all-tables`与`import`命令基本相同。其导入多个表到HDFS/hive中，生成表与导入表是1对1的关系，所以不能指定`--hive-table`，否则只能导入第一个表；若不需要导入某些表，可使用`--exclude-tables`来排除这些表，表名以`,`分割，`,`前后不能有空格，否则报错。用法如`--exclude-tables a,b,c`。 `import-all-tables`不支持`--append`参数，因此若需要将多个关系型数据库中的表导入Hive中的某个表，需要使用`sqoop import`。
