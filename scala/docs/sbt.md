@@ -12,7 +12,7 @@ SBT build动作由`build.sbt`（任何以.sbt结尾的文件名也行）进行�
 - batch mode   
  直接在shell中执行sbt相关命令，如`sbt clean compile "testOnly TestA TestB"`。由于该模式每次都需要JVM和JIT，所以build较慢。
 - Continuous build and test   
- 在sbt shell中，在命令前加`~`，会自动build修改的文件。如`testQuick`。
+ 在sbt shell中，在命令前加`~`，会自动build修改的文件。如`~testQuick`。
 
 sbt包含的命令如下：
 
@@ -22,9 +22,9 @@ clean   | 删除`target`目录所有生成的文件。
 compile | 编译 `src/main/scala` 和 `src/main/java` 目录下的文件。
 test    | 编译并运行所有test文件。
 console | 启动一个包含所有编译的源文件和依赖的Scala编译器。使用`:quit`和Ctrl+D（UNIX）下退出sbt。
-run <argument>* | 执行main方法。
+run \<argument\>* | 执行main方法。
 package | 打jar包。
-help <command> |  输出help等。
+help \<command\> |  输出help等。
 reload | 重新加载build定义文件。
 
 ## SBT语法说明
