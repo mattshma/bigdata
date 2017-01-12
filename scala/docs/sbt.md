@@ -57,7 +57,8 @@ Key有如下三种类型：
   命令行中的参数做为task key的输入。
 
 ### 添加lib依赖
-若程序依赖第三方lib，有如下两种方法，其一是下载jars放在程序`lib/`目录下，其二是在sbt中添加依赖，如下添加10.4.1.3版本的Derby lib依赖：
+若程序依赖第三方lib，有如下两种方法，其一是下载jars放在程序`lib/`目录下，其二是在sbt中添加依赖，语法为`libraryDependencies += groupID % artifactID % revision
+`，如下添加10.4.1.3版本的Derby lib依赖：
 ```
 val derby = "org.apache.derby" % "derby" % "10.4.1.3"
 
@@ -75,6 +76,18 @@ lazy val root = (project in file("."))
   )
 ```
 `+=`将被加值加到原值上而非代替，`%`用于根据字符串构造Ivy模块ID。
+
+当然，也可以使用`++=`一次性添加多个依赖：
+```
+libraryDependencies ++= Seq(
+  groupID % artifactID % revision,
+  groupID % otherID % otherRevision
+)
+```
+
+#### 使用`%%`取得正确的scala版本
+如果使用`libraryDependencies += "org.scala-tools" %% "scala-stm" % "0.3"`，groupID后跟`%%`，则sbt会将Scala征本添加到artifact后，如若scala版本为2.11.1，`libraryDependencies += "org.scala-tools" % "scala-stm_2.11.1" % "0.3"`使用`%%`的写法是`libraryDependencies += "org.scala-tools" %% "scala-stm" % "0.3"`。
+
 
 ### scope axes
 根据上下文的不同，每个key可能会有不同的value，这种上下文称之为scope。scope有如下三种类型：
