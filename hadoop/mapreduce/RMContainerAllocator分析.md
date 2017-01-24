@@ -1,5 +1,5 @@
 # RMContainerAllocator分析
-__说明：Hadoop版本为2.6.0。为减少代码量，文中代码多做过删减，完整代码需参考官方源码。__
+_说明：Hadoop版本为2.6.0。为减少代码量，文中代码多做过删减，完整代码需参考官方源码。_
 
 ## 背景
 业务方Job正常情况1个小时能执行完成，但在某些时候，会执行4个多小时甚至失败。查看失败的Log，发现有如下报警：
@@ -35,24 +35,25 @@ __说明：Hadoop版本为2.6.0。为减少代码量，文中代码多做过删�
 
 而Yarn JobHistory UI上Note项显示：`Reducer preempted to make room for pending map attempts`和`Task KILL is received. Killing attempt!`。
 
-从实际监控来看，出现问题时，没跑完的map全在pending状态，而reduce在copy阶段已占用大量资源，由于map一直在等空闲资源，而reduce一直等未完成的map执行完，形成了一个死锁。大约一个多小时后，AppMaster将reduce kill并释放资源。出现这种情况时，Job运行时间会增加几小时。
+从实际监控来看，出现问题时，没跑完的map全在等待资源，而reduce在copy阶段已占用大量资源，由于map一直在等空闲资源，而reduce一直等未完成的map执行完，形成了一个死锁。大约一个多小时后，AppMaster将reduce kill并释放资源。出现这种情况时，Job运行时间会增加几小时。
 
 ## ContainerAllocator介绍
-ContainerAllocator通过与RM通信，为Job申请资源。
+ContainerAllocator通过与RM通信，为Job申请资源，同时其维护一个心跳信息，获取新分配的资源和各Container运行情况。
 
 在[注释](https://github.com/apache/hadoop/blob/branch-2.6.0/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-app/src/main/java/org/apache/hadoop/mapreduce/v2/app/rm/RMContainerAllocator.java#L120)中可以看到，map生命周期为`scheduled->assigned->completed`，reduce生命周期为`pending->scheduled->assigned->completed`。只要收到map的请求后，map的状态即变为`scheduled`状态，reduce根据map完成数和集群资源情况在`pending`和`scheduled`状态中变动。
 
-> Vocabulary Used: 
-> pending -> requests which are NOT yet sent to RM
-> scheduled -> requests which are sent to RM but not yet assigned
-> assigned -> requests which are assigned to a container
-> completed -> request corresponding to which container has completed 
+> Vocabulary Used:          
+> pending -> requests which are NOT yet sent to RM                       
+> scheduled -> requests which are sent to RM but not yet assigned           
+> assigned -> requests which are assigned to a container               
+> completed -> request corresponding to which container has completed               
 
 ContainerAllocator将所有任务分成三类：
 - Failed Map。Priority为5。
 - Reduce。Priority为10。
 - Map。Priority为20。
-Priority越低，该任务优先级越高。即这三种任务同时请求资源时，若有充足资源，会优先分配给Failed Map，其次是Reduce，最后才是Map。
+
+Priority越低，该任务优先级越高。即这三种任务同时请求资源时，资源优先分配给Failed Map，其次是Reduce，最后才是Map。
 
 ## 源码分析
 
@@ -62,7 +63,7 @@ Priority越低，该任务优先级越高。即这三种任务同时请求资源
       ((Service)this.containerAllocator).init(getConfig());
       ((Service)this.containerAllocator).start();
 ```
-由于MRAppMaster继承自CompositeService类，CompositeService类继承自抽象类AbstractService。在AbstractService类的[init()](https://github.com/apache/hadoop/blob/branch-2.6.0/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/service/AbstractService.java#L151)会调用`serviceInit()`方法，[start()](serviceInit)调用`serviceStart()`方法，所以这两行最终调用RMContainerAllocator类的`serviceInit()`和`serviceStart()`方法。下面依次讨论。
+由于MRAppMaster继承自CompositeService类，CompositeService类继承自抽象类AbstractService。在AbstractService类的[init()](https://github.com/apache/hadoop/blob/branch-2.6.0/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/service/AbstractService.java#L151)会调用`serviceInit()`方法，[start()](https://github.com/apache/hadoop/blob/branch-2.6.0/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/service/AbstractService.java#L184)调用`serviceStart()`方法，所以这两行最终调用RMContainerAllocator类的`serviceInit()`和`serviceStart()`方法。下面依次讨论。
 
 [serviceInit()](https://github.com/apache/hadoop/blob/branch-2.6.0/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-app/src/main/java/org/apache/hadoop/mapreduce/v2/app/rm/RMContainerAllocator.java#L183)方法如下：
 
@@ -167,12 +168,12 @@ protected synchronized void heartbeat() throws Exception {
           int preemptionReduceNumForOneMap =
               ResourceCalculatorUtils.divideAndCeilContainers(mapResourceRequest,
                 reduceResourceRequest, getSchedulerResourceTypes());
-	  // 最多允许抢占的Reduce数。
+          // 最多允许抢占的Reduce数。
           int preemptionReduceNumForPreemptionLimit =
               ResourceCalculatorUtils.divideAndCeilContainers(
                 Resources.multiply(resourceLimit, maxReducePreemptionLimit),
                 reduceResourceRequest, getSchedulerResourceTypes());
-	  //为运行所有hanging的map需要抢占的reduce数。
+          //为运行所有hanging的map需要抢占的reduce数。
           int preemptionReduceNumForAllMaps =
               ResourceCalculatorUtils.divideAndCeilContainers(
                 Resources.multiply(mapResourceRequest, hangingMapRequests),
@@ -212,4 +213,10 @@ protected synchronized void heartbeat() throws Exception {
     }
 ```
 
-至此整个问题已大致清楚。
+至此整个问题已大致清楚。少部分map由于reduce占用过多资源，无法执行，Container中kill相关reduce，腾出资源让map继续执行。这里有个疑问，从源码和配置文件中，如果map出现资源不足的情况，reduce应该会立即释放资源，但为何map等待时间这么久？从log可以看到，container申请资源时间相当长，考虑到使用的是FairScheduler，所以猜测与[YARN-3485](https://issues.apache.org/jira/browse/YARN-3485)有关。对于此问题，比较好的方案就是尽量错开大Job的执行时间，另外可适当调大`COMPLETED_MAPS_FOR_REDUCE_SLOWSTART`值，尽量让map多完成，但这样可能造成job运行时间变长。
+
+还有个问题，heartbeart多久发送一次呢？通过查看[RMCommunicator](https://github.com/apache/hadoop/blob/branch-2.6.0/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-app/src/main/java/org/apache/hadoop/mapreduce/v2/app/rm/RMCommunicator.java#L280)类，可知道周期由参数`yarn.app.mapreduce.am.scheduler.heartbeat.interval-ms`控制，周期默认值为`1000ms`。
+
+## 参考
+- [MAPREDUCE-6302](https://issues.apache.org/jira/browse/MAPREDUCE-6302)
+- [YARN-3485](https://issues.apache.org/jira/browse/YARN-3485)
