@@ -116,7 +116,7 @@ JSP标准标签库(JSTL)是一个JSP标签集群，封装了JSP的通用核心�
 ![jstl_xml_tag_library](img/jstl_xml_tag_library.jpg)
 
 #### Internationalization Tag Library
-![jstl_fmt_tag_libray](img/jstl_fmt_tag_library.png)
+![jstl_fmt_tag_library](img/jstl_fmt_tag_library.jpg)
 
 #### SQL Tag Library
 ![jstl_sql_tag_library](img/jstl_sql_tag_library.png)
