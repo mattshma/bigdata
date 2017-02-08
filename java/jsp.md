@@ -71,6 +71,7 @@ public Object removeAttribute(String name)
 - `[]`与`.`    
   这两种运算符用来取数据。
 - 属性范围在EL中的名称       
+
   属性范围    | EL名称
   ------------|-----------
     page      | pageScope
@@ -115,13 +116,13 @@ JSP标准标签库(JSTL)是一个JSP标签集群，封装了JSP的通用核心�
 ![jstl_xml_tag_library](img/jstl_xml_tag_library.jpg)
 
 #### Internationalization Tag Library
-![jstl_fmt_tag_libray](img/jstl_fmt_tag_libray.jpg)
+![jstl_fmt_tag_libray](img/jstl_fmt_tag_libray.png)
 
 #### SQL Tag Library
-![jstl_sql_tag_library](img/jstl_sql_tag_library.jpg)
+![jstl_sql_tag_library](img/jstl_sql_tag_library.png)
 
 #### Function Tag Library
-![jst_function_tag_library](img/jstl_function_tag_library.jpg)
+![jst_function_tag_library](img/jstl_function_tag_library.png)
 
 ## 参考
 - [JavaServer Pages Technology](http://docs.oracle.com/javaee/5/tutorial/doc/bnagx.html)
