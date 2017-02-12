@@ -47,7 +47,7 @@ java.lang.RuntimeException: hbase-default.xml file seems to be for an older vers
 则先将 hbase/hbase-common/src/main/resource/hbase-default.xml 中的 `hbase.defaults.for.version.skip` 属性设置为 `true`，然后再启动即可。
 
 ## HBase Shell
-启动 HMaser，接下来编译 HBase Shell。点击 Edit Configurations...，新建Application，在 Name 栏写：HBaseShell（或其他），在 Program arguments 中填 hbase/bin/hirb.rb，根据 hbase/bin/hirb.rb，知其需要传递参数 `hbase.ruby.sources`，因此在 VM options 中填入`-Dhbase.ruby.sources=/<YOUR-PATH>/hbase/hbase-shell/src/main/ruby`。如下图：
+启动 HMaser，接下来编译 HBase Shell。点击 Edit Configurations...，新建Application，在 Name 栏写：HBaseShell（或其他），Main class 填 `org.jruby.Main`, Program arguments 填 hbase/bin/hirb.rb，根据 hbase/bin/hirb.rb，知其需要传递参数 `hbase.ruby.sources`，因此 VM options 填 `-Dhbase.ruby.sources=/<YOUR-PATH>/hbase/hbase-shell/src/main/ruby`。如下图：
 
 ![hbase_shell](../img/build_hbase_shell.jpg)
 
