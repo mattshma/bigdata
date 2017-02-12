@@ -2,7 +2,7 @@
 
 ### 目录
 #### Chapter 1
-- [HBase架构](hbase_architecture.md)
+- [HBase架构](hbase_architecture.md) --> Doing
 - [Meta分析](hbase_meta.md)
 - [WAL分析](hbase_wal.md)
 - [MemStore分析](hbase_memstore.md)
@@ -11,7 +11,7 @@
 - [Compaction](hbase_compaction.md)
 - [Split](hbase_split.md)
 - [Merge](hbase_merge.md)
-- [Zookeeper](hbase_zookeeper.md)
+- [Zookeeper](hbase_zookeeper.md)  --> Doing
 
 #### Chapter 2
 - [Reading Data from HBase](read_data_from_hbase.md)
@@ -35,3 +35,6 @@
 
 #### Chapter 5
 - [HBase优化](https://github.com/mattshma/hbase/blob/master/src/main/asciidoc/_chapters/performance.adoc)
+
+#### Other
+- [搭建HBase本地调试环境](debug_hbase_source_code.md)
