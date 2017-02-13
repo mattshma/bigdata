@@ -40,6 +40,19 @@ Tomcat Goal可参考[Plugin Documentation](http://tomcat.apache.org/maven-plugin
 ps: Community相比Ultimate功能缺失有点多了，不过Ultimate价格又有点贵了-,-
 
 ## 快捷方式
+
+先说下 Mac 中各[修饰键](https://support.apple.com/zh-cn/HT201236)的符号，如下：
+
+ 修饰键  |  符号
+---------|----------
+ Command | ⌘
+ Option | ⌥
+ Caps Lock | ⇪
+ Shift | ⇧
+ Control | ⌃
+ Fn |   |
+
+
 ### 快捷键
 
   功能      |  快捷键
