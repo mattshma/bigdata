@@ -24,12 +24,12 @@ RegionServer失败的原因有好几种，第一种情况是服务被正常关�
 ### 重新分配 Regions
 一旦完成恢复写操作后，重新分配 Region 会很快执行，该操作依赖 Zookeeper，参见[HBASE-7247](https://issues.apache.org/jira/browse/HBASE-7247)。更多 Assignment 过程可参考[HBASE-7327](https://issues.apache.org/jira/browse/HBASE-7327)。
 
-## MTTR 说明
-以上三个过程，前两个花费时间较多。这两个过程都与 timeout 设置时长有关。
+## MTTR 调优分析
+从以上分析可以看出，若 RegionServer 被正常关闭，Region 的恢复相当快速。但若 RegionServer 因网络异常或机器宕机等意外情况无法访问，在检测阶段和恢复阶段，将花费大量时间在请求等待 timeout 上，因此优化的思路也很明确 -- 尽量减少检测和恢复的 timeout 时间。
 
 对于检测失败节点，timeout 时间由 `zookeeper.session.timeout` 设置，默认值为 90s。为减少检测失败节点时间，可适当降低该值，不过由于 RegionServer GC 也会导致无法向 Zookeeper 发送心跳，因此该值需大于 RegionServer GC 时间。
 
-对于恢复正在进行的写操作，由于需要恢复 WAL，最坏情况是找到仅存的一个 block（即2个RegionServer挂掉），所以如果 HBase 的 timeout 时间为 60s 的话，则 HDFS 需设置为 20s 无响应的话即认为 DataNode 挂掉。在 HDFS 中，若一个 DataNode 被宣告死亡，则其复本需复制到其他存活的 DataNode 上，显然，这个操作是很消耗资源的。如果多个 DataNode 同时被宣告死亡，将引发"replication storms"： 大量复本都需要复制，导致系统过载，部分节点压力过大，无法发送心跳信息，进而这些节点被宣告死亡，这又导致这些节点上的复本需要复制，依此循环。基于这个原因，HDFS 在启动恢复进程前会先等待一段时间（大于10分钟），对于 HBase 这样的低延迟系统，显然这是无法接受的。在 HDFS 1.2 的版本后，引入了一个特殊状态：`stale` -- 若在指定时间内 HDFS 节点没发送心跳信息，则标记该节点状态为 stale。该状态的节点不能接收写请求，对于读请求，也是优先选择非 stale 的节点。在 [hdfs-site.xml](https://github.com/apache/hadoop/blob/branch-2.8.0/hadoop-hdfs-project/hadoop-hdfs/src/main/resources/hdfs-default.xml) 中，设置 stale 的配置如下：
+对于恢复正在进行的写操作，由于需要恢复 WAL，最坏情况是找到仅存的一个 block（即2个RegionServer挂掉），所以如果 HBase 的 timeout 时间为 60s 的话，则 HDFS 需设置为 20s 无响应的话即认为 DataNode 挂掉。在 HDFS 中，若一个 DataNode 被宣告死亡，则其复本需复制到其他存活的 DataNode 上，显然，这个操作是很消耗资源的。如果多个 DataNode 同时被宣告死亡，将引发"replication storms"： 大量复本都需要复制，导致系统过载，部分节点压力过大，无法发送心跳信息，进而这些节点被宣告死亡，这又导致这些节点上的复本需要复制，依此循环。基于这个原因，HDFS 在启动恢复进程前会先等待一段时间（大于10分钟），对于 HBase 这样的低延迟系统，显然这是无法接受的。在 [HDFS 1.2](https://issues.apache.org/jira/browse/HDFS-3912) 的版本后，引入了一个特殊状态：`stale` -- 若在指定时间内 HDFS 节点没发送心跳信息，则标记该节点状态为 stale。该状态的节点不能接收写请求，对于读请求，也是优先选择非 stale 的节点。在 [hdfs-site.xml](https://github.com/apache/hadoop/blob/branch-2.8.0/hadoop-hdfs-project/hadoop-hdfs/src/main/resources/hdfs-default.xml) 中，设置 stale 的配置如下：
 
 ```
 <property>
@@ -58,3 +58,4 @@ RegionServer失败的原因有好几种，第一种情况是服务被正常关�
 ## 参考
 - [INTRODUCTION TO HBASE MEAN TIME TO RECOVERY (MTTR)](http://hortonworks.com/blog/introduction-to-hbase-mean-time-to-recover-mttr/)
 - [HBASE-5843](https://issues.apache.org/jira/browse/HBASE-5843)
+

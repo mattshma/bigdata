@@ -36,6 +36,7 @@
 #### Chapter 5
 - [HBase优化](https://github.com/mattshma/hbase/blob/master/src/main/asciidoc/_chapters/performance.adoc)
 - [HBase MTTR](hbase_mttr.md)
+- [HBase Timeline Consistency](hbase_timeline_consistency.md)
 
 #### Other
 - [搭建HBase本地调试环境](debug_hbase_source_code.md)
