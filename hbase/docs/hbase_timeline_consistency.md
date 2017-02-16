@@ -46,6 +46,7 @@ hbase.master.loadbalancer.class   | org.apache.hadoop.hbase.master.balancer.Stoc
 
 ### 客户端配置
 如下：
+
 属性 | 设置值 | 说明
 --------|--------|-----------
 hbase.ipc.client.specificThreadForWriting    | true | HBase 1.0.x 版本使用 `hbase.ipc.client.specificThreadForWriting` 而非该参数。
