@@ -55,6 +55,10 @@ hbase.client.primaryCallTimeout.multiget  | 10ms |
 hbase.client.replicaCallTimeout.scan | 10ms | 
 hbase.meta.replicas.use | true | 
 
+### 激活 Read Replicas
+
+建表时指定`REGION_REPLICATION`即可，如`hbase> create 'myTable', 'myCF', {REGION_REPLICATION => '3'}`。
+
 ## 参考
 - [Timeline-consistent High Available Reads](https://github.com/apache/hbase/blob/master/src/main/asciidoc/_chapters/architecture.adoc#10-timeline-consistent-high-available-reads)
 - [HBase Read Replicas](https://www.cloudera.com/documentation/enterprise/5-4-x/topics/admin_hbase_read_replicas.html)
