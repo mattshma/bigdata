@@ -30,7 +30,7 @@
 - [Region In Transcation分析](hbase_sc_rit.md)
 - [RegionServer分析](hbase_sc_regionserver.md)
 - [Region分析](hbase_sc_region.md)
-- [Split分析](hbase_sc_split.md)
+- [Split分析](source_code/hbase_sc_split.md)
 - [ConnectionCache](hbase_sc_connectioncache.md)
 
 #### Chapter 5

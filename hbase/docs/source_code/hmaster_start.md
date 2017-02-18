@@ -28,7 +28,7 @@ __说明: 当前参考 HBase 版本为[1.2.5](https://github.com/apache/hbase/tr
 首先找到 HMaster 的 `main()`方法，其参数为 HBase 相关属性(minRegionServers, localRegionServers, masters, backup 四个属性)和 start, stop, clear 3个动作来执行相关操作。如下：
 ```
   public static void main(String [] args) {
-    // 打印 HBase 版本信息
+    // 打印 HBase 版本信息。
     VersionInfo.logVersion();
    //启动 HMasterCommandLine 的 doMain() 方法，该方法会调用 ToolRunner 类的 run() 方法，而 ToolRunner 类的 run() 调用 HMasterCommandLine 类的 run() 做为返回值。
     new HMasterCommandLine(HMaster.class).doMain(args);
@@ -58,7 +58,7 @@ public class HMasterCommandLine extends ServerCommandLine {
 }
 ``` 
 
-HMaster 构造函数调用父类 HRegionServer 构造函数，重点步骤如下：
+HMaster 构造函数调用父类 HRegionServer 构造函数，HRegionServer 构造方法重点步骤如下：
 ```
 public class HRegionServer extends HasThread implements
     RegionServerServices, LastSequenceId {
@@ -66,16 +66,16 @@ public class HRegionServer extends HasThread implements
   public HRegionServer(Configuration conf, CoordinatedStateManager csm)
       throws IOException, InterruptedException {
 
-    // 文件系统设置可用
+    // 文件系统设置可用。
     this.fsOk = true;
     this.conf = conf;
-    // 通过 conf 设置初始化 userProvider
+    // 通过 conf 设置初始化 userProvider。
     this.userProvider = UserProvider.instantiate(conf);
-    // 根据 conf 设置 Short Circuit Read
+    // 根据 conf 设置 Short Circuit Read。
     FSUtils.setupShortCircuitRead(this.conf);
-    // RegionServer 中关闭 Meta 表的 Read Replicas 特性
+    // RegionServer 中关闭 Meta 表的 Read Replicas 特性。
     this.conf.setBoolean(HConstants.USE_META_REPLICAS, false);
-    // 读取 conf 中部分配置
+    // 读取 conf 中部分配置。
     ...
     this.threadWakeFrequency = conf.getInt(HConstants.THREAD_WAKE_FREQUENCY, 10 * 1000);
     this.numRegionsToReport = conf.getInt(
@@ -88,9 +88,9 @@ public class HRegionServer extends HasThread implements
       HConstants.DEFAULT_HBASE_RPC_SHORTOPERATION_TIMEOUT);
     ...
 
-    // 创建 RPC 服务
+    // 创建 RPC 服务。
     rpcServices = createRpcServices();
-    // 设置 serverName
+    // 设置 serverName。
     serverName = ServerName.valueOf(hostName, rpcServices.isa.getPort(), startcode);
     rpcControllerFactory = RpcControllerFactory.instantiate(this.conf);
     rpcRetryingCallerFactory = RpcRetryingCallerFactory.instantiate(this.conf);
@@ -100,23 +100,23 @@ public class HRegionServer extends HasThread implements
       HConstants.ZK_CLIENT_KERBEROS_PRINCIPAL, hostName);
     // login the server principal (if using secure Hadoop)
     login(userProvider, hostName);
-    // 初始化超级用户
+    // 初始化超级用户。
     Superusers.initialize(conf);
     ...
-    // 根据 fs.defaultFS 设置初始化文件系统
+    // 根据 fs.defaultFS 设置初始化文件系统。
     initializeFileSystem();
 
-    // 新建 ExecutorService 对象，其类似于线程池。后续会做介绍
+    // 新建 ExecutorService 对象，其类似于线程池。后续会做介绍。
     service = new ExecutorService(getServerName().toShortString());
-    // 设置 spanReceiverHost ，SpanReceiver 可参考 http://hbase.apache.org/book.html#tracing.spanreceivers 
+    // 设置 spanReceiverHost ，SpanReceiver 可参考 http://hbase.apache.org/book.html#tracing.spanreceivers 。
     spanReceiverHost = SpanReceiverHost.getInstance(getConfiguration());
 
     if (!conf.getBoolean("hbase.testing.nocluster", false)) {
-      // 连接 Zookeeper 服务并设置 primary watcher
+      // 连接 Zookeeper 服务并设置 primary watcher。
       zooKeeper = new ZooKeeperWatcher(conf, getProcessName() + ":" +
         rpcServices.isa.getPort(), this, canCreateBaseZNode());
 
-      // 初始化 BaseCoordinatedStateManager 并启动
+      // 初始化 BaseCoordinatedStateManager 并启动。
       this.csm = (BaseCoordinatedStateManager) csm;
       this.csm.initialize(this);
       this.csm.start();
@@ -125,24 +125,89 @@ public class HRegionServer extends HasThread implements
       tableLockManager = TableLockManager.createTableLockManager(
         conf, zooKeeper, serverName);
 
-      // 监听 Zookeeper 上的 /master 这个 znode 目录
+      // 监听 Zookeeper 上的 /master 这个 znode 目录。
       masterAddressTracker = new MasterAddressTracker(getZooKeeper(), this);
       masterAddressTracker.start();
 
-      // Tracker on cluster settings up in zookeeper
+      // Tracker on cluster settings up in zookeeper。
       clusterStatusTracker = new ClusterStatusTracker(zooKeeper, this);
       clusterStatusTracker.start();
     }
-    // 配置管理器。若在线修改配置，其允许修改相关配置，而无需重启整个集群
+    // 配置管理器。若在线修改配置，其允许修改相关配置，而无需重启整个集群。
     this.configurationManager = new ConfigurationManager();
 
-    // 启动 RPC 服务
+    // 启动 RPC 服务。
     rpcServices.start();
-    // 启动 WebUI
+    // 启动 WebUI。
     putUpWebUI();
     this.walRoller = new LogRoller(this, this);
-    // 新建 ChoreService 对象，其能周期性调度 [ScheduledChore](https://hbase.apache.org/devapidocs/org/apache/hadoop/hbase/ScheduledChore.html)
+    // 新建 ChoreService 对象，其能周期性调度 [ScheduledChore](https://hbase.apache.org/devapidocs/org/apache/hadoop/hbase/ScheduledChore.html) 。
     this.choreService = new ChoreService(getServerName().toString(), true);   
 ```
 
+接着继续看 HMaster 构造方法。
+```
+public class HMaster extends HRegionServer implements MasterServices, Server {
+
+  public HMaster(final Configuration conf, CoordinatedStateManager csm)
+      throws IOException, KeeperException, InterruptedException {
+    super(conf, csm);
+
+    ...
+    // HMaster 关闭 Meta 表的 Read Replicas 特性。
+    this.conf.setBoolean(HConstants.USE_META_REPLICAS, false);
+
+    // 根据配置是否开启复制功能。
+    Replication.decorateMasterConfiguration(this.conf);
+
+    // Hack! Maps DFSClient => Master for logs.  HDFS made this
+    // config param for task trackers, but we can piggyback off of it.
+    if (this.conf.get("mapreduce.task.attempt.id") == null) {
+      this.conf.set("mapreduce.task.attempt.id", "hb_m_" + this.serverName.toString());
+    }
+
+    // 是否开启压缩。
+    this.masterCheckCompression = conf.getBoolean("hbase.master.check.compression", true);
+
+    // 是否开启加密。
+    this.masterCheckEncryption = conf.getBoolean("hbase.master.check.encryption", true);
+  
+    // 设置 MetricsMaster 。
+    this.metricsMaster = new MetricsMaster(new MetricsMasterWrapperImpl(this));
+
+    // preload table descriptor at startup。
+    this.preLoadTableDescriptors = conf.getBoolean("hbase.master.preload.tabledescriptors", true);
+
+    // Do we publish the status?
+
+    boolean shouldPublish = conf.getBoolean(HConstants.STATUS_PUBLISHED,
+        HConstants.STATUS_PUBLISHED_DEFAULT);
+    ...
+
+    if (shouldPublish) {
+      if (publisherClass == null) {
+        LOG.warn(HConstants.STATUS_PUBLISHED + " is true, but " +
+            ClusterStatusPublisher.DEFAULT_STATUS_PUBLISHER_CLASS +
+            " is not set - not publishing status");
+      } else {
+        // ClusterStatusPublisher 发布集群状态给客户端，这样客户端能立即知道死亡的 RegionServer，并关闭和这些 RegionServer 的连接。这能提高 MTTR。
+        clusterStatusPublisherChore = new ClusterStatusPublisher(this, conf, publisherClass);
+        getChoreService().scheduleChore(clusterStatusPublisherChore);
+      }
+    }
+
+    // Some unit tests don't need a cluster, so no zookeeper at all
+    if (!conf.getBoolean("hbase.testing.nocluster", false)) {
+      activeMasterManager = new ActiveMasterManager(zooKeeper, this.serverName, this);
+      int infoPort = putUpJettyServer();
+      // 启动 ActiveMasterManager，用于选举 Active Master。
+      startActiveMasterManager(infoPort);
+    } else {
+      activeMasterManager = null;
+    }
+  }
+}
+```
+
 ## 参考
+- [HMaster.java](https://github.com/apache/hbase/blob/branch-1.2/hbase-server/src/main/java/org/apache/hadoop/hbase/master/HMaster.java)
