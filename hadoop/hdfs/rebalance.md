@@ -28,7 +28,7 @@ threshold 默认为 10%，可自定义设置。
 
 运行 rebalance 的方法是在datanode端（非namenode）运行`hadoop balance [-t <threshold>]`。此时会在运行rebalance的机器上起一个独立的进程，然后过程如下：
 
-![rebalance](../../img/rebalance.jpg)
+![rebalance](../img/rebalance.jpg)
 
 从上图中可以看到几点：
 
