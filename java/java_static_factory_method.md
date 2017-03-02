@@ -30,16 +30,16 @@ public final class Boolean implements java.io.Serializable,
 - 静态工厂方法不需要每次调用时都创建新的对象。静态工厂方法允许不可变类使用预先初始化过的实例，或同上面 Boolean 类一样，缓存其创建的实例对象（查看各原始数据类型的封装类，基本都是通过这种方法实现的）。
 - 静态工厂方法还可以返回该类型的子类对象。这让静态工厂方法的扩展性远远大于构造方法，这种情况的实例之一是 JDK 源码中的 EnumSet 类型，其根据参数中的元素个数返回不同类型的实例。
 - 静态工厂方法可以简化参数化类型对象的创建过程。如下是例子：
-```
-Map<String, List<String>> m = new HashMap<String, List<String>>();
-
-public static <K, V> HashMap<K, V> newInstance() {
-       return new HashMap<K, V>();
-}
-
-Map<String, List<String>> m = HashMap.newInstance();
-```
-第一行可以简化成第三行代码。
+  ```
+  Map<String, List<String>> m = new HashMap<String, List<String>>();
+  
+  public static <K, V> HashMap<K, V> newInstance() {
+         return new HashMap<K, V>();
+  }
+  
+  Map<String, List<String>> m = HashMap.newInstance();
+  ```
+  第一行可以简化成第三行代码。
 
 ## 缺点
 当然，静态工厂方法也是有如下一些缺点的。	
@@ -49,8 +49,8 @@ Map<String, List<String>> m = HashMap.newInstance();
  - of -- 和 valueOf 类似。
  - getInstance -- 根据参数返回对应的对象，该对象可能是缓存对象池中的对象。对于 Singleton 模式，使用无参的 getInstance 方法，并且总是返回同一对象。
  - newInstance -- 和 getInstance 类似，不过每次返回的都是新创建的对象。
- - get_Type_ -- 和 getInstance 类似，不过返回的对象是另外一个不同类型（_Type_ 类型）的类。
- - new_Type_ -- 和 newInstance 类似，不过每次返回的都是新创建的不同类型（_Type_ 类型）的类。
+ - get _Type_ -- 和 getInstance 类似，不过返回的对象是另外一个不同类型（_Type_ 类型）的类。
+ - new _Type_ -- 和 newInstance 类似，不过每次返回的都是新创建的不同类型（_Type_ 类型）的类。
 
 
 
