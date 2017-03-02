@@ -11,6 +11,7 @@
 
 ## Advanced
 - [反射](java_reflection.md)
+- [静态工厂方法](java_static_factory_method.md)
 
 ## 多编程
 - [java多线程](java_thread.md)
