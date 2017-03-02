@@ -49,10 +49,6 @@ public final class Boolean implements java.io.Serializable,
  - of -- 和 valueOf 类似。
  - getInstance -- 根据参数返回对应的对象，该对象可能是缓存对象池中的对象。对于 Singleton 模式，使用无参的 getInstance 方法，并且总是返回同一对象。
  - newInstance -- 和 getInstance 类似，不过每次返回的都是新创建的对象。
- - get\_Type_ -- 和 getInstance 类似，不过返回的对象是另外一个不同类型（_Type_ 类型）的类。
- - new\_Type_ -- 和 newInstance 类似，不过每次返回的都是新创建的不同类型（_Type_ 类型）的类。
-
-
-
- 
+ - get*Type* -- 和 getInstance 类似，不过返回的对象是另外一个不同类型（_Type_ 类型）的类。
+ - new*Type* -- 和 newInstance 类似，不过每次返回的都是新创建的不同类型（_Type_ 类型）的类。
 
