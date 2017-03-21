@@ -15,7 +15,7 @@ Hadoop有三种安装模式：单机模式（Standalone Mode）, 伪分布模式
 
 ### 准备条件
 - JDK1.7+ (这里使用JDK1.8，因为 Hadoop3/Spark2 只支持 JDK1.8+)
-- ssh 免密登录
+- ssh 
 - Centos 6.4+ （其他 Linux 操作系统也行）
 
 ### 安装 jdk-8u121
@@ -35,7 +35,7 @@ Hadoop 2.7.3
 
 ## 配置
 
-再分别说下3种模式的配置情况
+再分别说下3种模式的配置情况。
 
 ### 单机模式
 
@@ -162,7 +162,7 @@ $ chmod 0600 ~/.ssh/authorized_keys
 ```
 
 #### 格式化HDFS文件系统  
-在使用Hadoop，先格式化一个新的HDFS安装。输入命令`hdfs namdenode -format`即可。
+在使用Hadoop，先格式化一个新的HDFS安装。输入命令`bin/hdfs namdenode -format`即可。
 
 #### 启动HDFS守护进程
 
