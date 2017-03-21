@@ -159,7 +159,7 @@ Hadoop 2.7.3
 $ ssh-keygen -t dsa
 $ cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
 $ chmod 0600 ~/.ssh/authorized_keys
-``
+```
 
 #### 格式化HDFS文件系统  
 在使用Hadoop，先格式化一个新的HDFS安装。输入命令`hdfs namdenode -format`即可。
