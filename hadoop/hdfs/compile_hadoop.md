@@ -54,12 +54,12 @@ Subversion https://github.com/apache/hadoop.git -r baa91f7c6bc9cb92be5982de4719c
 
 ### 调试 Hadoop 
 
-- 设置hadoop-envs.h  
+#### 设置hadoop-env.sh  
 在 IntelliJ IDEA 中打开 Hadoop 源码，点击 Run --> Edit Configurations --> Add New Configuration --> Remote，修改其名字为 NameNodeDebug，点击 Apply，如下图：
 
 ![debug_conf](../img/debug_hadoop_conf.png)
 
-接着复制 Command line arguments for running remote JVM 的设置值：`-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005`，将其粘贴于 etc/hadoop/hadoop-env.sh 中，如下：
+接着复制 Command line arguments for running remote JVM 的值：`-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005`，将其粘贴于 etc/hadoop/hadoop-env.sh 中，如下：
 
 ```
 export HADOOP_NAMENODE_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"
@@ -67,7 +67,7 @@ export HADOOP_NAMENODE_OPTS="-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-
 ```
 将 `suspend=n` 修改为 `suspend=y`，这样 hdfs 会挂起在任何 debug namenode 的地方。
 
-- 挂起 NameNode 在 5005 端口监听    
+#### 挂起 NameNode 并在 5005 端口监听    
 重启 Hadoop：
 ```
 # sbin/stop-dfs.sh
@@ -81,15 +81,15 @@ export HADOOP_NAMENODE_OPTS="-Dhadoop.security.logger=${HADOOP_SECURITY_LOGGER:-
 
 在启动过程中，如果看到 `localhost: Listening for transport dt_socket at address: 5005` 则说明调试模式下启动 namenode 成功。
 
-- 设置断点     
+#### 设置断点     
 在 IntelliJ 中设置断点。 
 
-- 调试  
+#### 调试  
 打开 IntelliJ，点击 NameNodeDebug 旁边的 Debug 按钮，开始调试。如下图：
 
 ![debug](../img/debug_hadoop.png)
 
-
+以上。
 
 ### 参考
 - [BUILDING.txt](https://github.com/apache/hadoop/blob/branch-2.7.3/BUILDING.txt)
