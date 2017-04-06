@@ -25,7 +25,7 @@
 
 配置 Applicaiton Name 为 HMaster（任意名），设置 Main class 为`org.apache.hadoop.hbase.master.HMaster`，Program arguments 为 `start`，VM options 设置下log， 为 `-Dlog4j.configuration=file:/<YOUR-PATH>/hbase/conf/log4j.properties`。点击 Apply 和 OK。
 
-设置Application后，点击运行即可。 运行HMaster，端口为16010，而非60010。在浏览器中输入 http://localhost:16010，即可看到页面如下：
+设置Application后，点击运行即可。 运行HMaster，端口为16010，而非60010。在浏览器中输入 http://localhost:16010 ，即可看到页面如下：
 
 ![hbase_run](../img/build_hbase_run.jpg)
 
