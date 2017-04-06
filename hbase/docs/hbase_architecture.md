@@ -13,7 +13,7 @@ HBase有如下特性：
 - Block Cache 和 Bloom Filter
 - 便于管理
 
-## HBase的强一致性
+## HBase的一致性
 > [CAP定理](https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86)指出对于一个分布式系统而言，不可能同时满足以下三点：
 - 一致性（Consistence）
 - 可用性（Availability）
@@ -27,16 +27,17 @@ HBase有如下特性：
 > - 最终一致性：更新完成后，在“不一致窗口”后的请求的返回值都是一致。最终一致性是弱一致性的特例。
 >
 
-- HBase是怎样保证强一致性的呢？
-  - 每个值只出现在一个region。
-  - 同一时间每个region只被分配给一个region server。
-  - 所有行内的mutation操作都是原子操作。
-  - 通过任何API返回的行的内容总是一个完整的行。
-- HBase有哪几种一致性？
-  - timeline 
-  - strong
-- hbase 建表时指定的复制备份是啥意思？和hfds备份数为3有啥关系?
-- hbase强一致性与hdfs复制3份的关系。
+### HBase有哪几种一致性？
+- 强一致性（Strong Consistency）
+  强一致性是HBase的默认一致性模型。
+- 时间轴一致性（Timeline Consistency）  
+  时间轴一致性的读请求的返回结果可能不包括最近更新的数据，即get和scan可能包括过期数据。为保证写事务的顺序，HBase中的写事务都是强一致性模型。 若需要使用时间轴一致性的读请求，可执行命令：`get 't1','r6', {CONSISTENCY => "TIMELINE"}`。
+
+### HBase是怎样保证强一致性的呢？
+- 每个值只出现在一个region。
+- 同一时间每个region只被分配给一个region server。
+- 所有行内的mutation操作都是原子操作。
+- 通过任何API返回的行的内容总是一个完整的行。
 
 ## Architecture
 引用的一张图：
@@ -53,11 +54,6 @@ Table       (HBase table)
               StoreFile          (StoreFiles for each Store for each Region for the table)
                     Block             (Blocks within a StoreFile within a Store for each Region for the table)
 ```
-
-## Zookeeper
-
-## 读写
-
 
 ## Reference
 - [Apache HBase ™ Reference Guide](https://hbase.apache.org/book.html)

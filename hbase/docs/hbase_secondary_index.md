@@ -40,3 +40,4 @@ aid-bid-datetime |     info:aid  |   info:bid   |   info:cid |  info:did
 - [HBase Rowkey Design](http://archive.cloudera.com/cdh5/cdh/5/hbase-1.0.0-cdh5.6.0/book.html#rowkey.design)
 - [Secondary Indexes and Alternate Query Paths](http://hbase.apache.org/book.html#secondary.indexes)
 - [HBase高性能复杂条件查询引擎](http://www.infoq.com/cn/articles/hbase-second-index-engine)
+- [Secondary Indexing In HBase: A tale of how to screw up a simple idea by breaking all the rules](https://www.linkedin.com/pulse/secondary-indexing-hbase-tale-how-screw-up-simple-idea-michael-segel?articleId=7019091741337614180#comments-7019091741337614180&trk=sushi_topic_posts)
