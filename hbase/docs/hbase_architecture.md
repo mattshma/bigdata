@@ -1,19 +1,19 @@
 # HBase Architecture
 
 ## Overview
-HBase有如下特性：
+HBase 有如下特性：
 
 - 强一致性
 - 自动分片
 - RegionServer 自动故障转移
-- 整合Hadoop/HDFS
-- 支持MapReduce
-- 提供Java Client API
-- 提供Thrift/REST API
+- 整合 Hadoop/HDFS
+- 支持 MapReduce
+- 提供 Java Client API
+- 提供 Thrift/REST API
 - Block Cache 和 Bloom Filter
 - 便于管理
 
-## HBase的一致性
+## HBase 的一致性
 > [CAP定理](https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86)指出对于一个分布式系统而言，不可能同时满足以下三点：
 - 一致性（Consistence）
 - 可用性（Availability）
@@ -27,24 +27,24 @@ HBase有如下特性：
 > - 最终一致性：更新完成后，在“不一致窗口”后的请求的返回值都是一致。最终一致性是弱一致性的特例。
 >
 
-### HBase有哪几种一致性？
+### HBase 有哪几种一致性？
 - 强一致性（Strong Consistency）
-  强一致性是HBase的默认一致性模型。
+  强一致性是 HBase 的默认一致性模型。
 - 时间轴一致性（Timeline Consistency）  
-  时间轴一致性的读请求的返回结果可能不包括最近更新的数据，即get和scan可能包括过期数据。为保证写事务的顺序，HBase中的写事务都是强一致性模型。 若需要使用时间轴一致性的读请求，可执行命令：`get 't1','r6', {CONSISTENCY => "TIMELINE"}`。
+  时间轴一致性的读请求的返回结果可能不包括最近更新的数据，即 get 和 scan 可能包括过期数据。为保证写事务的顺序，HBase 中的写事务都是强一致性模型。 若需要使用时间轴一致性的读请求，可执行命令：`get 't1','r6', {CONSISTENCY => "TIMELINE"}`。
 
-### HBase是怎样保证强一致性的呢？
-- 每个值只出现在一个region。
-- 同一时间每个region只被分配给一个region server。
-- 所有行内的mutation操作都是原子操作。
-- 通过任何API返回的行的内容总是一个完整的行。
+### HBase 是怎样保证强一致性的呢？
+- 每个值只出现在一个 region。
+- 同一时间每个 region 只被分配给一个 region server。
+- 所有行内的 mutation 操作都是原子操作。
+- 通过任何 API 返回的行的内容总是一个完整的行。
 
 ## Architecture
 引用的一张图：
 
 ![hbase_arch](../img/hbase_arch.png)
 
-每个HRegionServer共享一个WAL，HRegionServer有一个或多个Region构成，每个Region下又有一个或多个Store，每个表的列族对应一个Store实例，每个Store包括一个或多个StoreFile实例，StoreFile为HBase实际存储文件HFile的封装，每个Store对应一个MemStore。HFile由多个Block组成。
+每个 HRegionServer 共享一个WAL，HRegionServer 有一个或多个 Region 构成，每个 Region 下又有一个或多个 Store，每个表的列族对应一个 Store 实例，每个 Store 包括一个或多个 StoreFile 实例，StoreFile 为 HBase 实际存储文件 HFile 的封装，每个 Store 对应一个 MemStore。HFile 由多个 Block 组成。
 
 ```
 Table       (HBase table)
@@ -54,6 +54,8 @@ Table       (HBase table)
               StoreFile          (StoreFiles for each Store for each Region for the table)
                     Block             (Blocks within a StoreFile within a Store for each Region for the table)
 ```
+
+## LSM树 & B+树 --> TODO
 
 ## Reference
 - [Apache HBase ™ Reference Guide](https://hbase.apache.org/book.html)

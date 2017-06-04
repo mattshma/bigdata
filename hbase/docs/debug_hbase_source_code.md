@@ -11,7 +11,7 @@
 > git checkout branch-1.2
 > mvn clean install -DskipTests
 ```
-接着在 IntelliJ 中导入源码：选择 File --> New --> Project From Existing Sources...，选择hbase导入。导入后，选择 Edit Configurations，如下图：
+1.2 版本默认对应的 Hadoop 版本为 2.5.1，若需要修改为其他版本，可使用命令: `mvn clean install -Denforcer.skip=true -Dhadoop-two.version=2.7.2 -DskipTests -Prelease`。编译完成后，接着在 IntelliJ 中导入源码：选择 File --> New --> Project From Existing Sources...，选择hbase导入。导入后，选择 Edit Configurations，如下图：
 
 ![hbase_edit_configuration](../img/build_hbase_edit_con.jpg)
 
