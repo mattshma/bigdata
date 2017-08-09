@@ -31,7 +31,7 @@ _说明：若源码版本未特别指明，则默认为 1.2。_
 - [HBase Timeline Consistency](docs/hbase_timeline_consistency.md)
 - [HBase TimeOut](docs/hbase_timeout.md)
 - [HBase Retry](docs/hbase_retry.md)
-- [HBase Replication](docs/hbase_replication)
+- [HBase Replication](docs/hbase_replication.md)
 
 #### Chapter 3 Usage
 - [Reading Data from HBase](docs/read_data_from_hbase.md)
