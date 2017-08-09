@@ -37,7 +37,7 @@ message ConnectionHeader {
   optional VersionInfo version_info = 5;
 }
 ```
-- 若是 processRequest() 分析请求的话，也会分析请求头 [RequestHeader](https://github.com/apache/hbase/blob/branch-1.2/hbase-protocol/src/main/protobuf/RPC.proto#L114)，并将请求封装到 Call 对象中，再封装为 CallRunner 对象转给 scheduler，参考[源码](https://github.com/apache/hbase/blob/branch-1.2/hbase-server/src/main/java/org/apache/hadoop/hbase/ipc/RpcServer.java#L1889)，若 call 处理完成后，将该 call 加入到 Respond quque 中。
+- 若是 processRequest() 分析请求的话，也会分析请求头 [RequestHeader](https://github.com/apache/hbase/blob/branch-1.2/hbase-protocol/src/main/protobuf/RPC.proto#L114)，并将请求封装到 Call 对象中，再封装为 CallRunner 对象转给 scheduler，参考[源码](https://github.com/apache/hbase/blob/branch-1.2/hbase-server/src/main/java/org/apache/hadoop/hbase/ipc/RpcServer.java#L1889)，若 call 处理完成后，将该 call 加入到 Respond 队列中。
 
 Connection 对象：
 ```
