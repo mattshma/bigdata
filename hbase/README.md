@@ -1,5 +1,7 @@
 ## HBase 文档
 
+_说明：若源码版本未特别指明，则默认为 1.2。_
+
 ### 目录
 #### Chapter 1 Basic
 - [HBase Architecture](docs/hbase_architecture.md)  :point_left:
@@ -57,3 +59,5 @@
 - [Apache HBase](https://blogs.apache.org/hbase/)
 - [Cloudera Blog -- HBase](http://blog.cloudera.com/blog/category/hbase/)
 - [有态度的 HBase](http://hbasefly.com/)
+
+
