@@ -51,9 +51,9 @@ listener 是在 application, session, request 三个对象创建，销毁，或�
 
 // db-test.properties
 jdbc.driver=com.mysql.jdbc.Driver
-jdbc.url=jdbc:mysql://XXXXXX
-jdbc.username=X
-jdbc.password=Y
+jdbc.url=jdbc:mysql://X
+jdbc.username=Y
+jdbc.password=Z
 ```
 
 生产配置文件为 db-prod.xml 和 db-properties，内容如下：
@@ -72,9 +72,9 @@ jdbc.password=Y
 
 // db-prod.properties
 jdbc.driver=com.mysql.jdbc.Driver
-jdbc.url=jdbc:mysql://XXXXXX
-jdbc.username=X
-jdbc.password=Y
+jdbc.url=jdbc:mysql://A
+jdbc.username=B
+jdbc.password=C
 ```
 
 在 applicationContext.xml 文件中，有如下语句：
@@ -104,6 +104,6 @@ jdbc.password=Y
 ```
 即除最后一个`context:property-placeholder`外，其余`context:property-placeholder`均加`ignore-unresolvable="true"`这个属性。问题解决。
 
-使用方法2 修改相同属性名，不需要`<context:property-placeholder location="classpath*:*.properties"/>`。可解决问题。
+使用方法2修改相同属性名，然后将所有db-test.properties 和 db-prod.properties 合并为一个文件。该方法不需要`<context:property-placeholder location="classpath*:*.properties"/>`。可解决问题。
 
 以上两种方法，方法2优于方法1，一是所有配置合为一处，二是可能方法2需要配置多个<context:property-placeholder location="X" ignore-unresolvable="true">，略显繁琐。
