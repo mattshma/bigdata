@@ -19,12 +19,12 @@ listener 是在 application, session, request 三个对象创建，销毁，或�
 - <context:annotation-config />             
 隐式的向Spring容器注册 AutowiredAnnotationBeanPostProcessor（用于使用 @Autowired 注解）、CommonAnnotationBeanPostProcessor（用于使用 @Resource、@PostConstruct 等注解）、PersistenceAnnotationBeanPostProcessor（用于使用 @PersistenceContext 注解。）、RequiredAnnotationBeanPostProcessor（用于使用 @Required 注解）这 4 个BeanPostProcessor。
 - <context:component-scan base-package="xxx" />       
-扫描 base-package 下的 Java 文件，若扫描到 @Component、@Controller、@Service、@Repository 等注解，则将这些类注册为 bean。因此使用 <context:component-scan> 后，可去掉 <context:annotation-config />。
+扫描 base-package 下的 Java 文件，若扫描到 @Component、@Controller、@Service、@Repository 等注解，则将这些类注册为 bean。因此使用 <context:component-scan /> 后，可去掉 <context:annotation-config />。
 - <mvc:annotation-driven />              
 注册了一个 `RequestMappingHandlerMapping`, `RequestMappingHandlerAdapter`, `ExceptionHandlerExceptionResolver`，同时开启了 @NumberFormat、@DateTimeFormat 等功能的支持。具体见 https://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html#mvc-config-enable 。
 - <mvc:default-servlet-handler />        
 在springMVC-servlet.xml中配置 `<mvc:default-servlet-handler />` 后，会在Spring MVC上下文中定义一个org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler，它会像一个检查员，对进入 DispatcherServlet 的 URL 进行筛查，如果发现是静态资源的请求，就将该请求转由 Web 应用服务器默认的 Servlet 处理，如果不是静态资源的请求，才由DispatcherServlet 继续处理。
-- <mvc:argument-resolvers>`          
+- <mvc:argument-resolvers />         
 参数解析器。
 - <context:property-placeholder />         
 将配置文件放在单独的文件中，使用该标签可以访问配置文件，配置文件路径同 location 指定。
