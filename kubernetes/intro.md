@@ -5,7 +5,7 @@
 
 整体结构如下图:
 
-![img/arch.png]
+![arch](img/arch.png)
 
 以下简单介绍下各模块：
 - kube-apiserver   
