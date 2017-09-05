@@ -48,15 +48,15 @@
 - 各节点时间一致，这点可通过配置 ntp 服务实现。
 - 如下端口可用
 
-  Node type | Port | Purpose
- -----------|-----------|-----------
-  Master    | 6443      | Kubernetes API Server
-  Master    | 2379-2380 | etcd Server Client API
-  Master/Node    | 10250     | Kubelet API
-  Master    | 10251     | kube-scheduler
-  Master    | 10252     | kube-controller-manager
-  Master/Node      | 10255     | Read-only Kubelet API (Heapster)
-  Node      | 30000-32767 | Node 上服务随机使用的端口
+ Node type | Port | Purpose
+-----------|-----------|-----------
+ Master    | 6443      | Kubernetes API Server
+ Master    | 2379-2380 | etcd Server Client API
+ Master/Node    | 10250     | Kubelet API
+ Master    | 10251     | kube-scheduler
+ Master    | 10252     | kube-controller-manager
+ Master/Node      | 10255     | Read-only Kubelet API (Heapster)
+ Node      | 30000-32767 | Node 上服务随机使用的端口
 
 
 本次测试机器情况如下：
@@ -72,10 +72,10 @@
 ```
 // 开启 extras
 $ sudo yum-config-manager --enable extras
-$ sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+$ sudo yum -y install yum-utils device-mapper-persistent-data lvm2
 $ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 $ sudo yum makecache fast
-$ sudo yum install docker-ce
+$ sudo yum -y install docker-ce
 $ yum list docker-ce.x86_64  --showduplicates | sort -r
 $ sudo systemctl start docker
 $ sudo docker run hello-world
@@ -87,13 +87,14 @@ $ sudo docker run hello-world
 安装 kubernetes 的方式较多，比如官网上使用 kubectl 进行安装；若希望开发或调试 kubernetes，可通过编译安装；使用 kubeadm 可以学习官方在集群配置方面的一些最佳实践，不过该方法目前仍在测试版本中，因此不能用于正式环境使用。这里使用[二进制预编译包](https://github.com/kubernetes/kubernetes/releases)安装。在各节点上下载最新版 kubernetes 后解压，如下：
 ```
 $ cd kubernetes/cluster
+// 若需设置 proxy 才能访问外网，可先在 get-kube-binaries.sh 中进行设置 export https_proxy=http://SERVER:PROT/
 $ ./get-kube-binaries.sh
 $ cd ../server
 $ tar xvzf kubernetes-server-linux-amd64.tar.gz
-$ cd kubernetes/serverrm 
+$ cd kubernetes/server/bin
 $ rm *.tar *_tag
-# 这里可以将 kubernetes 组件 owner 置为 root
-# $ sudo chown root:root *
+// 这里可以将 kubernetes 组件 owner 置为 root
+// $ sudo chown root:root *
 $ sudo chmod 755 *
 $ sudo cp * /usr/bin
 ```
@@ -116,7 +117,7 @@ KUBE_MASTER="--master=http://svr001:8080"
 
 #### Kubernetes Master 
 
-- 下载 [etcd](https://github.com/coreos/etcd/releases)，解压后将 etcd, etcdctl 移动到 /opt/app/kubernetes/server/bin 目录下。
+- 下载 [etcd](https://github.com/coreos/etcd/releases)，解压后将 etcd, etcdctl 移动到 /usr/bin 目录下。
 - 配置 etcd。
 创建工作目录`/var/lib/etcd/default.etcd` 和配置文件目录 `/etc/etcd`，新建配置文件 `/etc/etcd/etcd.conf`，参考配置如下：
 ```
@@ -172,8 +173,32 @@ done
 若 status service 返回：`Active: active (running)`，则启动成功。如果启动失败，通过 `sudo journalctl -xe` 查看原因。
 
 #### Kubernetes Minion
-下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld, mk-docker-opts.sh, etcd, etcdctl 移动到 /opt/app/kubernetes/server/bin 目录下，此时 kubernetes 各组件安装完成，接着进行配置。
+- 下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld 移动到 /usr/bin 目录下。
+- 编辑 `/etc/sysconfig/flanneld`，内容如下：
+```
+FLANNEL_ETCD_ENDPOINTS="http://srv001:2379"
+```
+- 创建目录 `/etc/kubernetes`，新建文件 `/etc/kubernetes/kubelet`，内容如下：
+```
+KUBELET_ADDRESS="--address=0.0.0.0"
+KUBELET_PORT="--port=10250"
+KUBELET_API_SERVER="--api-servers=http://srv001:8080"
+KUBELET_ARGS="--cgroup-driver=systemd"
+``` 编辑 `/etc/kubernetes/proxy`，内容如下：
+```
+KUBE_PROXY_ARGS=""
+```
+- 将 [kubernetes systemd](https://github.com/kubernetes/contrib/tree/master/init/systemd) 中的 kubelet.service 和 kube-proxy.service 拷贝到 /
 
+- 启动服务：
+```
+$ sudo systemctl daemon-reload
+$ for SERVICES in kube-proxy kubelet flanneld docker; do
+    sudo systemctl restart $SERVICES
+    sudo systemctl enable $SERVICES
+    sudo systemctl status $SERVICES
+done
+```
 ## 报错
 在安装过程中，有如下几个报错，以下分别是解决过程
 ### docker 依赖 
