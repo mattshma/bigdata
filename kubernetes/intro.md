@@ -89,7 +89,7 @@ $ sudo cp * /usr/bin
 #### Kubernetes Master 
 
 - 下载 [etcd](https://github.com/coreos/etcd/releases)，解压后将 etcd, etcdctl 移动到 /usr/bin 目录下。
-- 参考[kubernetes systemd](systemd)，将 etcd.service， kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下；将 [kuebernetes conf](etc) 中 config, apiserver 拷贝到 `/etc/kubernetes` 目录下，etcd.conf 拷贝到 `/etc/etcd` 中，并创建文件目录 ``/var/lib/etcd/default.etcd`。各 service 文件中指定启动 user 为 kube，因此还需要做如下操作：
+- 参考[kubernetes systemd](systemd)，将 etcd.service， kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下；将 [kuebernetes conf](etc) 中 config, apiserver 拷贝到 `/etc/kubernetes` 目录下，etcd.conf 拷贝到 `/etc/etcd` 中，并创建文件目录 ``/var/lib/etcd/default.etcd`，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip）。各 service 文件中指定启动 user 为 kube，因此还需要做如下操作：
 ```
 $ sudo useradd kube
 $ sudo chown -R kube:kube /var/run/kubernetes
@@ -127,9 +127,9 @@ FLANNELD_ETCD_PREFIX="/kube/network"
 ```
 由于默认情况下，flanneld 会读取 etcd 上 `/coreos.com/network/config` 的配置，若想修改该配置，可通过`--etcd-prefix`（即配置中的 `FLANNEL_ETCD_PREFIX`）来覆盖该配置。 
 - 在 etcd 中配置网络。
-执行命令：`etcdctl set /kube/network/config '{"Network": "10.8.0.0/16", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'`。
+执行命令：`etcdctl set /kube/network/config '{"Network": "10.10.0.0/16", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'`。
 flannel 默认 Backend 为 `udp`，[由于 udp 只能用于 debug](https://coreos.com/flannel/docs/latest/backends.html)，所以这里修改为 `vxlan`，另外注意 etcd 中 value 为 JSON 格式。
-- 将 [kubernetes systemd](systemd) 中的 flanneld.service， kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下。
+- 将 [kubernetes systemd](systemd) 中的 flanneld.service， kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip）。
 - 启动服务：
 ```
 $ sudo systemctl daemon-reload
@@ -201,12 +201,7 @@ Cgroup Driver: cgroupfs
 
 ### 启动 flanneld 后，服务器无法登录
 
-在折腾这么久后，以为马上就能成功了，结果重启 flanneld 后，服务器无法登录了，ping 仍能ping通。通过远程控制卡登录，发现 `ip a` 有 flannel.1 信息，但 `systemctl status flanneld` 显示 flanneld 启动失败。去掉这条网络就行了，可以重启服务器或通过如下命令解决：
-
-```
-ifconfig flannel.1 down
-ip link delete flannel.1
-```
+在折腾这么久后，以为马上就能成功了，结果重启 flanneld 后，通过跳板机无法登录该服务器了，ping 仍能ping通。刚好之前将 Master 的 ssh key 加到了该机器中，通过 Matser 能登录，发现 `ip a` 有 flannel.1 信息，但 `systemctl status flanneld` 显示 flanneld 启动失败。查看路由，发现 etcd 中设置的网段所在的路由刚好比正常跳板机到该机器的路由优先级高，重新设置 etcd 中的 `/kube/network/config` 中的 Network 为其他网段即可。
 
 ## 参考
 - [CentOS install Kubernetes](https://kubernetes.io/docs/getting-started-guides/centos/centos_manual_config/)
