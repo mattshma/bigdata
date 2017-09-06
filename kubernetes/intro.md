@@ -84,68 +84,16 @@ $ sudo chmod 755 *
 $ sudo cp * /usr/bin
 ```
 
-接下来修改 Kubernetes 配置 `/etc/kubernetes/config`，参考配置如下：
-```
-# logging to stderr means we get it in the systemd journal
-KUBE_LOGTOSTDERR="--logtostderr=true"
-
-# journal message level, 0 is debug
-KUBE_LOG_LEVEL="--v=0"
-
-# Should this cluster be allowed to run privileged docker containers
-KUBE_ALLOW_PRIV="--allow-privileged=false"
-
-# How the replication controller and scheduler find the kube-apiserver
-KUBE_MASTER="--master=http://svr001:8080"
-```
 根据角色不同，以下分别叙述 Kubernetes Master 和 Kubernetes Node 上的部署。
 
 #### Kubernetes Master 
 
 - 下载 [etcd](https://github.com/coreos/etcd/releases)，解压后将 etcd, etcdctl 移动到 /usr/bin 目录下。
-- 配置 etcd。
-创建工作目录`/var/lib/etcd/default.etcd` 和配置文件目录 `/etc/etcd`，新建配置文件 `/etc/etcd/etcd.conf`，参考配置如下：
-```
-# [member]
-ETCD_NAME=default
-ETCD_DATA_DIR="/var/lib/etcd/default.etcd"
-ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:2379"
-
-# [cluster]
-ETCD_ADVERTISE_CLIENT_URLS="http://localhost:2379"
-```
-
-创建 etcd 的服务文件`/usr/lib/systemd/system/etcd.service` 用于 systemd 使用，其文件内容如下：
-```
-[Unit]
-Description=Etcd Server
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/var/lib/etcd/
-EnvironmentFile=/etc/etcd/etcd.conf
-ExecStart=/usr/bin/etcd
-
-[Install]
-WantedBy=multi-user.target
-```
-- 配置 Kubernetes ApiServer，新建配置文件 `/etc/kubernetes/apiserver`，参考配置如下：
-```
-KUBE_API_ADDRESS="--address=0.0.0.0"
-KUBE_API_PORT="--port=8080"
-KUBELET_PORT="--kubelet_port=10250"
-KUBE_ETCD_SERVERS="--etcd_servers=http://127.0.0.1:2379"
-KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.254.0.0/16"
-```
-- 参考[kubernetes systemd](systemd)，将 kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下。将 [kuebernetes conf](etc) 中 config, apiserver 拷贝到 `/etc/kubernetes` 目录下。
-
-各 service 文件中指定启动 user 为 kube，因此还需要做如下操作：
+- 参考[kubernetes systemd](systemd)，将 etcd.service， kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下；将 [kuebernetes conf](etc) 中 config, apiserver 拷贝到 `/etc/kubernetes` 目录下，etcd.conf 拷贝到 `/etc/etcd` 中，并创建文件目录 ``/var/lib/etcd/default.etcd`。各 service 文件中指定启动 user 为 kube，因此还需要做如下操作：
 ```
 $ sudo useradd kube
 $ sudo chown -R kube:kube /var/run/kubernetes
 ```
-
 - 如架构图中所示，启动 etcd, API Server, Scheduler, Controller Manager 等 Master 组件：
 ```
 $ sudo systemctl daemon-reload
@@ -171,29 +119,17 @@ $ sudo systemctl start docker
 $ sudo docker run hello-world
 ```
 若 yum 无法访问外网，可在 /etc/yum.conf 中设置 proxy 代理；若 docker 无法访问外网，参考 [Control and configure Docker with systemd](https://docs.docker.com/engine/admin/systemd/) 设置代理。
-- 下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld 移动到 /usr/bin 目录下。同时将 kubernetes/cluster/centos/node/bin/remove-docker0.sh 移到 /usr/bin 目录下，该脚本用来删除 docker 默认网络，使用 flannel 网络。
+- 下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld 移动到 /usr/bin 目录下。~~同时将 kubernetes/cluster/centos/node/bin/remove-docker0.sh 移到 /usr/bin 目录下，该脚本用来删除 docker 默认网络，使用 flannel 网络~~。
 - 编辑 `/etc/sysconfig/flanneld`，内容如下：
 ```
-FLANNEL_ETCD_ENDPOINTS="http://srv001:2379"
-FLANNEL_ETCD_PREFIX="/kube/network"
+FLANNELD_ETCD_ENDPOINTS="http://srv001:2379"
+FLANNELD_ETCD_PREFIX="/kube/network"
 ```
 由于默认情况下，flanneld 会读取 etcd 上 `/coreos.com/network/config` 的配置，若想修改该配置，可通过`--etcd-prefix`（即配置中的 `FLANNEL_ETCD_PREFIX`）来覆盖该配置。 
 - 在 etcd 中配置网络。
 执行命令：`etcdctl set /kube/network/config '{"Network": "10.8.0.0/16", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'`。
 flannel 默认 Backend 为 `udp`，[由于 udp 只能用于 debug](https://coreos.com/flannel/docs/latest/backends.html)，所以这里修改为 `vxlan`，另外注意 etcd 中 value 为 JSON 格式。
-- 创建目录 `/etc/kubernetes`，新建文件 `/etc/kubernetes/kubelet`，内容如下：
-```
-KUBELET_ADDRESS="--address=0.0.0.0"
-KUBELET_PORT="--port=10250"
-KUBELET_API_SERVER="--api-servers=http://srv001:8080"
-KUBELET_ARGS="--cgroup-driver=systemd"
-``` 
-- 编辑 `/etc/kubernetes/proxy`，内容如下：
-```
-KUBE_PROXY_ARGS=""
-```
-- 将 [kubernetes systemd](systemd) 中的 kubelet.service 和 kube-proxy.service 拷贝到 /
-
+- 将 [kubernetes systemd](systemd) 中的 flanneld.service， kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下。
 - 启动服务：
 ```
 $ sudo systemctl daemon-reload
@@ -203,6 +139,8 @@ $ for SERVICES in kube-proxy kubelet flanneld docker; do
     sudo systemctl status $SERVICES
 done
 ```
+注：docker 需在 flanneld 启动成功后再启动。
+
 ## 报错
 在安装过程中，有如下几个报错，以下分别是解决过程
 ### docker 依赖 
@@ -233,7 +171,7 @@ Trying other mirror.
 Error downloading packages:
   docker-ce-17.06.1.ce-1.el7.centos.x86_64: [Errno 256] No more mirrors to try.
 ```
-感觉很奇怪，其他机器全都 yum 安装成功，这台机器安装失败，尝试`yum --enablerepo=docker-ce-stable clean metadata`再安装，仍失败，对比该机器配置与其他机器，也未发现异常。无奈只能手动下载 https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-ce-17.06.1.ce-1.el7.centos.x86_64.rpm 。下载完成后，执行`sudo yum -y install docker-ce-17.06.1.ce-1.el7.centos.x86_64.rpm`。安装成功
+感觉很奇怪，其他机器全都 yum 安装成功，这台机器安装失败，尝试`yum --enablerepo=docker-ce-stable clean metadata`再安装，仍失败，对比该机器配置与其他机器，也未发现异常。无奈只能手动下载 https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-ce-17.06.1.ce-1.el7.centos.x86_64.rpm 。下载完成后，执行`sudo yum -y install docker-ce-17.06.1.ce-1.el7.centos.x86_64.rpm`。安装成功。
 
 ### Couldn't fetch network config: client: etcd cluster is unavailable or misconfigured
 配置完 flanneld，启动报错：`Couldn't fetch network config: client: etcd cluster is unavailable or misconfigured`，提示找不到 etcd 服务。查看 `/etc/sysconfig/flanneld`，内容为：
@@ -246,6 +184,29 @@ FLANNEL_ETCD_PREFIX="/kube/network"
 > The command line options outlined above can also be specified via environment variables. For example --etcd-endpoints=http://10.0.0.2:2379 is equivalent to FLANNELD_ETCD_ENDPOINTS=http://10.0.0.2:2379 environment variable. Any command line option can be turned into an environment variable by prefixing it with FLANNELD_, stripping leading dashes, converting to uppercase and replacing all other dashes to underscores.
 
 将 FLANNEL 修改为 FLANNELD 后，重启 flanneld 即可。
+
+### failed to run Kubelet: failed to create kubelet: misconfiguration: kubelet cgroup driver: "systemd" is different from docker cgroup driver: "cgroupfs"
+启动 kubelet 报错，通过 `sudo journalctl -u kubelet` 查看 log，有如下错误信息：
+```
+Sep 06 16:39:50 SVR7679HW2285 kubelet[5731]: error: failed to run Kubelet: failed to create kubelet: misconfiguration: kubelet cgroup driver: "systemd" is different from docker cgroup driver: "cgroupfs"
+```
+
+查看 docker cgroup driver：
+```
+$ sudo docker info |grep Cgroup
+Cgroup Driver: cgroupfs
+```
+
+去掉 /etc/kubernetes/kubelet 中 `KUBELET_ARGS="--cgroup-driver=systemd"` 这行即可。
+
+### 启动 flanneld 后，服务器无法登录
+
+在折腾这么久后，以为马上就能成功了，结果重启 flanneld 后，服务器无法登录了，ping 仍能ping通。通过远程控制卡登录，发现 `ip a` 有 flannel.1 信息，但 `systemctl status flanneld` 显示 flanneld 启动失败。去掉这条网络就行了，可以重启服务器或通过如下命令解决：
+
+```
+ifconfig flannel.1 down
+ip link delete flannel.1
+```
 
 ## 参考
 - [CentOS install Kubernetes](https://kubernetes.io/docs/getting-started-guides/centos/centos_manual_config/)
