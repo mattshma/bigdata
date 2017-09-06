@@ -1,0 +1,2 @@
+# /etc/sysconfig/flanneld
+FLANNEL_ETCD_ENDPOINTS="http://KUBE_MASTER:2379"

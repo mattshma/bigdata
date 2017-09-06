@@ -1,0 +1,5 @@
+# /etc/kubernetes/kubelet
+KUBELET_ADDRESS="--address=0.0.0.0"
+KUBELET_PORT="--port=10250"
+KUBELET_API_SERVER="--api-servers=http://KUBE_MASTER:8080"
+KUBELET_ARGS="--cgroup-driver=systemd"

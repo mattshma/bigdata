@@ -1,0 +1,2 @@
+# /etc/kubernetes/proxy
+KUBE_PROXY_ARGS=""

@@ -63,24 +63,10 @@
 
  Hostname | IP |  OS | Memory | Network | Port
 ---------|-------|--------|------|---------
- svr001  | 10.8.100.10 | CentOS7.1 | 128G | 满足条件 | 满足条件
- svr002  | 10.8.100.11 | CentOS7.1 | 128G | 满足条件 | 满足条件
- svr003  | 10.8.100.12 | CentOS7.1 | 128G | 满足条件 | 满足条件
-
-### 安装 Docker
-在安装 Kubernetes 前，先安装 Docker，由于 docker 依赖的 `container-selinux` 包在 extras repo 中，因此需要先将该repo开启（默认开启）。执行命令如下：
-```
-// 开启 extras
-$ sudo yum-config-manager --enable extras
-$ sudo yum -y install yum-utils device-mapper-persistent-data lvm2
-$ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-$ sudo yum makecache fast
-$ sudo yum -y install docker-ce
-$ yum list docker-ce.x86_64  --showduplicates | sort -r
-$ sudo systemctl start docker
-$ sudo docker run hello-world
-```
-若 yum 无法访问外网，可在 /etc/yum.conf 中设置 proxy 代理；若 docker 无法访问外网，参考 [Control and configure Docker with systemd](https://docs.docker.com/engine/admin/systemd/) 设置代理。
+ svr001  | 192.168.100.10 | CentOS7.1 | 128G | 满足条件 | 满足条件
+ svr002  | 192.168.100.11 | CentOS7.1 | 128G | 满足条件 | 满足条件
+ svr003  | 192.168.100.12 | CentOS7.1 | 128G | 满足条件 | 满足条件
+ svr004  | 192.168.100.13 | CentOS7.1 | 128G | 满足条件 | 满足条件
 
 ### 安装 Kubernetes
 
@@ -151,7 +137,7 @@ KUBE_API_ADDRESS="--address=0.0.0.0"
 KUBE_API_PORT="--port=8080"
 KUBELET_PORT="--kubelet_port=10250"
 KUBE_ETCD_SERVERS="--etcd_servers=http://127.0.0.1:2379"
-KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.8.0.0/16"
+KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.254.0.0/16"
 ```
 - 参考[kubernetes systemd](https://github.com/kubernetes/contrib/tree/master/init/systemd)，将 kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下。将 environ 中各文件拷贝到 `/etc/kubernetes` 目录下。
 
@@ -173,18 +159,37 @@ done
 若 status service 返回：`Active: active (running)`，则启动成功。如果启动失败，通过 `sudo journalctl -xe` 查看原因。
 
 #### Kubernetes Minion
-- 下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld 移动到 /usr/bin 目录下。
+- 在安装 Kubernetes 前，先安装 Docker，由于 docker 依赖的 `container-selinux` 包在 extras repo 中，因此需要先将该repo开启（默认开启）。执行命令如下：
+```
+// 开启 extras
+$ sudo yum-config-manager --enable extras
+$ sudo yum -y install yum-utils device-mapper-persistent-data lvm2
+$ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+$ sudo yum makecache fast
+$ sudo yum -y install docker-ce
+$ yum list docker-ce.x86_64  --showduplicates | sort -r
+$ sudo systemctl start docker
+$ sudo docker run hello-world
+```
+若 yum 无法访问外网，可在 /etc/yum.conf 中设置 proxy 代理；若 docker 无法访问外网，参考 [Control and configure Docker with systemd](https://docs.docker.com/engine/admin/systemd/) 设置代理。
+- 下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld 移动到 /usr/bin 目录下。同时将 kubernetes/cluster/centos/node/bin/remove-docker0.sh 移到 /usr/bin 目录下，该脚本用来删除 docker 默认网络，使用 flannel 网络。
 - 编辑 `/etc/sysconfig/flanneld`，内容如下：
 ```
 FLANNEL_ETCD_ENDPOINTS="http://srv001:2379"
+FLANNEL_ETCD_PREFIX="/kube/network"
 ```
+由于默认情况下，flannedl 会读取 etcd 上 `/coreos.com/network/config` 的配置，若想修改该配置，可通过`--etcd-prefix`（即配置中的 `FLANNEL_ETCD_PREFIX`）来覆盖该配置。 
+- 在 etcd 中配置网络。
+执行命令：`etcdctl set /kube/network/config '{"Network": "10.8.0.0/16", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'`。
+flannel 默认 Backend 为 `udp`，[由于 udp 适用于 debug](https://coreos.com/flannel/docs/latest/backends.html)，所以这里修改为 `vxlan`，另外注意 etcd 中 value 为 JSON 格式。
 - 创建目录 `/etc/kubernetes`，新建文件 `/etc/kubernetes/kubelet`，内容如下：
 ```
 KUBELET_ADDRESS="--address=0.0.0.0"
 KUBELET_PORT="--port=10250"
 KUBELET_API_SERVER="--api-servers=http://srv001:8080"
 KUBELET_ARGS="--cgroup-driver=systemd"
-``` 编辑 `/etc/kubernetes/proxy`，内容如下：
+``` 
+- 编辑 `/etc/kubernetes/proxy`，内容如下：
 ```
 KUBE_PROXY_ARGS=""
 ```
@@ -217,7 +222,33 @@ Error: Package: docker-ce-17.06.1.ce-1.el7.centos.x86_64 (docker-ce-stable)
 
 查看 /etc/yum.repos.d 中 extras 相关的repo文件，打开 extras 对应的 baseurl，未发现 `container-selinux`，查看 [CentOS7 extras repo](http://mirror.centos.org/centos/7/extras/x86_64/Packages/)，能找到 container-selinux-2.19 等，于是在 /etc/yum.repos.d 中新建 repo 源，拷贝阿里的 yum 源：`wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo`。再 `yum makecache`后，重新安装，解决问题。解决方法业已在 [Docs to be updated for container-selinux](https://github.com/docker/for-linux/issues/21)提及。
 
+### Package does not match intended download
+一台机器在安装 docker 过程中报错：
+```
+$ sudo yum -y install docker-ce
+...
+https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-ce-17.06.1.ce-1.el7.centos.x86_64.rpm: [Errno -1] Package does not match intended download. Suggestion: run yum --enablerepo=docker-ce-stable clean metadata
+Trying other mirror.
+
+
+Error downloading packages:
+  docker-ce-17.06.1.ce-1.el7.centos.x86_64: [Errno 256] No more mirrors to try.
+```
+感觉很奇怪，其他机器全都 yum 安装成功，这台机器安装失败，尝试`yum --enablerepo=docker-ce-stable clean metadata`再安装，仍失败，对比该机器配置与其他机器，也未发现异常。无奈只能手动下载 https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-ce-17.06.1.ce-1.el7.centos.x86_64.rpm 。下载完成后，执行`sudo yum -y install docker-ce-17.06.1.ce-1.el7.centos.x86_64.rpm`。安装成功
+
+### Couldn't fetch network config: client: etcd cluster is unavailable or misconfigured
+配置完 flanneld，启动报错：`Couldn't fetch network config: client: etcd cluster is unavailable or misconfigured`，提示找不到 etcd 服务。查看 `/etc/sysconfig/flanneld`，内容为：
+```
+FLANNEL_ETCD_ENDPOINTS="http://10.8.122.167:2379"
+FLANNEL_ETCD_PREFIX="/kube/network"
+```
+
+在 flanneld 官网中有这么一段话：
+> The command line options outlined above can also be specified via environment variables. For example --etcd-endpoints=http://10.0.0.2:2379 is equivalent to FLANNELD_ETCD_ENDPOINTS=http://10.0.0.2:2379 environment variable. Any command line option can be turned into an environment variable by prefixing it with FLANNELD_, stripping leading dashes, converting to uppercase and replacing all other dashes to underscores.
+
+将 FLANNEL 修改为 FLANNELD 后，重启 flanneld 即可。
 
 ## 参考
 - [CentOS install Kubernetes](https://kubernetes.io/docs/getting-started-guides/centos/centos_manual_config/)
 - [Get Docker CE for CentOS](https://docs.docker.com/engine/installation/linux/docker-ce/centos/)
+- [Kubernetes systemd](https://github.com/kubernetes/contrib/tree/master/init/systemd)
