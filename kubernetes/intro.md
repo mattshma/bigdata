@@ -25,12 +25,12 @@
 ### node 组件
 - kubelet    
   kubelet 是主要的 node 客户端服务，其提供 pod 相关的操作。
-- kube-proxy   
+- kube-proxy(Kubernetes Proxy)   
   管理 service 的入口，kube-proxy 允许 kubernetes 服务进行网络连接的转发。
 - docker   
   用来运行容器。
-- supervisord   
-  用于守护 kubelet 和 docker 运行。
+- flanneld   
+  设置 docker 网络。
 
 ## 安装
 ### 条件
@@ -58,14 +58,14 @@
  Master/Node      | 10255     | Read-only Kubelet API (Heapster)
  Node      | 30000-32767 | Node 上服务随机使用的端口
 
-本次测试机器情况如下：
+本次测试机器角色分配如下：
 
- Hostname | IP |  OS | Memory | Network | Port
----------|-----|-----|--------|---------|---
- svr001  | 192.168.100.10 | CentOS7.1 | 128G | 满足条件 | 满足条件
- svr002  | 192.168.100.11 | CentOS7.1 | 128G | 满足条件 | 满足条件
- svr003  | 192.168.100.12 | CentOS7.1 | 128G | 满足条件 | 满足条件
- svr004  | 192.168.100.13 | CentOS7.1 | 128G | 满足条件 | 满足条件
+ Hostname | IP | Role | Components
+---------|-----|------|-------
+ svr001  | 192.168.100.10 | Master | etcd, API Server, Scheduler, Controller Manager
+ svr002  | 192.168.100.11 | Node | Flannel, Docker, Kubelet, kube-proxy
+ svr003  | 192.168.100.12 | Node | Flannel, Docker, Kubelet, kube-proxy
+ svr004  | 192.168.100.13 | Node | Flannel, Docker, Kubelet, kube-proxy
 
 ### 安装 Kubernetes
 
@@ -98,7 +98,7 @@ KUBE_ALLOW_PRIV="--allow-privileged=false"
 # How the replication controller and scheduler find the kube-apiserver
 KUBE_MASTER="--master=http://svr001:8080"
 ```
-根据角色不同，以下分别叙述 Kubernetes Master 和 Kubernetes Minion 上的部署。
+根据角色不同，以下分别叙述 Kubernetes Master 和 Kubernetes Node 上的部署。
 
 #### Kubernetes Master 
 
@@ -138,7 +138,7 @@ KUBELET_PORT="--kubelet_port=10250"
 KUBE_ETCD_SERVERS="--etcd_servers=http://127.0.0.1:2379"
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.254.0.0/16"
 ```
-- 参考[kubernetes systemd](https://github.com/kubernetes/contrib/tree/master/init/systemd)，将 kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下。将 environ 中各文件拷贝到 `/etc/kubernetes` 目录下。
+- 参考[kubernetes systemd](systemd)，将 kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下。将 [kuebernetes conf](etc) 中 config, apiserver 拷贝到 `/etc/kubernetes` 目录下。
 
 各 service 文件中指定启动 user 为 kube，因此还需要做如下操作：
 ```
@@ -157,7 +157,7 @@ done
 ```
 若 status service 返回：`Active: active (running)`，则启动成功。如果启动失败，通过 `sudo journalctl -xe` 查看原因。
 
-#### Kubernetes Minion
+#### Kubernetes Node
 - 在安装 Kubernetes 前，先安装 Docker，由于 docker 依赖的 `container-selinux` 包在 extras repo 中，因此需要先将该repo开启（默认开启）。执行命令如下：
 ```
 // 开启 extras
@@ -177,10 +177,10 @@ $ sudo docker run hello-world
 FLANNEL_ETCD_ENDPOINTS="http://srv001:2379"
 FLANNEL_ETCD_PREFIX="/kube/network"
 ```
-由于默认情况下，flannedl 会读取 etcd 上 `/coreos.com/network/config` 的配置，若想修改该配置，可通过`--etcd-prefix`（即配置中的 `FLANNEL_ETCD_PREFIX`）来覆盖该配置。 
+由于默认情况下，flanneld 会读取 etcd 上 `/coreos.com/network/config` 的配置，若想修改该配置，可通过`--etcd-prefix`（即配置中的 `FLANNEL_ETCD_PREFIX`）来覆盖该配置。 
 - 在 etcd 中配置网络。
 执行命令：`etcdctl set /kube/network/config '{"Network": "10.8.0.0/16", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'`。
-flannel 默认 Backend 为 `udp`，[由于 udp 适用于 debug](https://coreos.com/flannel/docs/latest/backends.html)，所以这里修改为 `vxlan`，另外注意 etcd 中 value 为 JSON 格式。
+flannel 默认 Backend 为 `udp`，[由于 udp 只能用于 debug](https://coreos.com/flannel/docs/latest/backends.html)，所以这里修改为 `vxlan`，另外注意 etcd 中 value 为 JSON 格式。
 - 创建目录 `/etc/kubernetes`，新建文件 `/etc/kubernetes/kubelet`，内容如下：
 ```
 KUBELET_ADDRESS="--address=0.0.0.0"
@@ -192,7 +192,7 @@ KUBELET_ARGS="--cgroup-driver=systemd"
 ```
 KUBE_PROXY_ARGS=""
 ```
-- 将 [kubernetes systemd](https://github.com/kubernetes/contrib/tree/master/init/systemd) 中的 kubelet.service 和 kube-proxy.service 拷贝到 /
+- 将 [kubernetes systemd](systemd) 中的 kubelet.service 和 kube-proxy.service 拷贝到 /
 
 - 启动服务：
 ```
