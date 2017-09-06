@@ -1,8 +1,18 @@
 # /etc/kubernetes/apiserver
+# The address on the local server to listen to.
 KUBE_API_ADDRESS="--address=0.0.0.0"
+
+# The port on the local server to listen on.
 KUBE_API_PORT="--port=8080"
+
+# Port kubelets listen on
 KUBELET_PORT="--kubelet_port=10250"
+
+# Comma separated list of nodes in the etcd cluster
 KUBE_ETCD_SERVERS="--etcd_servers=http://127.0.0.1:2379"
-KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.8.0.0/16"
+
+# Address range to use for services
+KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.254.0.0/16"
+
 KUBE_ADMISSION_CONTROL="--admission_control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ResourceQuota"
 KUBE_API_ARGS=""
