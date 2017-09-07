@@ -106,7 +106,7 @@ done
 若 status service 返回：`Active: active (running)`，则启动成功。如果启动失败，通过 `sudo journalctl -xe` 查看原因。
 
 #### Kubernetes Node
-- 在安装 Kubernetes 前，先安装 Docker，由于 docker 依赖的 `container-selinux` 包在 extras repo 中，因此需要先将该repo开启（默认开启）。执行命令如下：
+- 先安装 Docker，由于 docker 依赖的 `container-selinux` 包在 extras repo 中，因此需要先将该repo开启（默认开启）。执行命令如下：
 ```
 // 开启 extras
 $ sudo yum-config-manager --enable extras
@@ -129,7 +129,7 @@ FLANNELD_ETCD_PREFIX="/kube/network"
 - 在 etcd 中配置网络。
 执行命令：`etcdctl set /kube/network/config '{"Network": "10.10.0.0/16", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'`。
 flannel 默认 Backend 为 `udp`，[由于 udp 只能用于 debug](https://coreos.com/flannel/docs/latest/backends.html)，所以这里修改为 `vxlan`，另外注意 etcd 中 value 为 JSON 格式。
-- 将 [kubernetes systemd](systemd) 中的 flanneld.service， kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip）。
+- 将 [kubernetes systemd](systemd) 中的 flanneld.service， kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip），修改 kubelet 中 `KUBELET_HOSTNAME` 值。
 - 启动服务：
 ```
 $ sudo systemctl daemon-reload
@@ -140,6 +140,16 @@ $ for SERVICES in kube-proxy kubelet flanneld docker; do
 done
 ```
 注：docker 需在 flanneld 启动成功后再启动。
+
+## 使用
+安装完成后，在 Kubernetes Master 上执行：
+```
+[admin@SVR7681HW2285 ~]$ kubectl get nodes
+NAME              STATUS     AGE       VERSION
+centos-minion-1   Ready      7m        v1.7.5
+centos-minion-2   Ready      3m        v1.7.5
+centos-minion-3   Ready      1m        v1.7.5
+```
 
 ## 报错
 在安装过程中，有如下几个报错，以下分别是解决过程
@@ -185,7 +195,7 @@ FLANNEL_ETCD_PREFIX="/kube/network"
 
 将 FLANNEL 修改为 FLANNELD 后，重启 flanneld 即可。
 
-### failed to run Kubelet: failed to create kubelet: misconfiguration: kubelet cgroup driver: "systemd" is different from docker cgroup driver: "cgroupfs"
+### misconfiguration: kubelet cgroup driver: "systemd" is different from docker cgroup driver: "cgroupfs"
 启动 kubelet 报错，通过 `sudo journalctl -u kubelet` 查看 log，有如下错误信息：
 ```
 Sep 06 16:39:50 SVR7679HW2285 kubelet[5731]: error: failed to run Kubelet: failed to create kubelet: misconfiguration: kubelet cgroup driver: "systemd" is different from docker cgroup driver: "cgroupfs"
@@ -202,6 +212,42 @@ Cgroup Driver: cgroupfs
 ### 启动 flanneld 后，服务器无法登录
 
 在折腾这么久后，以为马上就能成功了，结果重启 flanneld 后，通过跳板机无法登录该服务器了，ping 仍能ping通。刚好之前将 Master 的 ssh key 加到了该机器中，通过 Matser 能登录，发现 `ip a` 有 flannel.1 信息，但 `systemctl status flanneld` 显示 flanneld 启动失败。查看路由，发现 etcd 中设置的网段所在的路由刚好比正常跳板机到该机器的路由优先级高，重新设置 etcd 中的 `/kube/network/config` 中的 Network 为其他网段即可。
+
+
+### no endpoints available for service \"kubernetes-dashboard\"
+启动 `kubectl proxy` 后，浏览器打开 http://KUBERNETES_MASTER:8080/ui/, 报错：`no endpoints available for service \"kubernetes-dashboard\"`。执行命令：
+```
+$ kubectl describe pod kubernetes-dashboard-2767253535-2jmw7 --namespace=kube-system
+...
+Containers:
+  kubernetes-dashboard:
+    Container ID:
+    Image:       registry.cn-hangzhou.aliyuncs.com/magina-k8s/kubernetes-dashboard-amd64:v1.6.3
+    Image ID:
+    Port:        9090/TCP
+    State:        Waiting
+      Reason:        ContainerCreating
+    Ready:        False
+...
+Events:
+  FirstSeen    LastSeen    Count    From            SubObjectPath    Type        Reason            Message
+  ---------    --------    -----    ----            -------------    --------    ------            -------
+  51s        51s        1    default-scheduler            Normal        Scheduled        Successfully assigned kubernetes-dashboard-2572645387-dbh26 to svr003
+  51s        25s        2    kubelet, svr003            Warning        MissingClusterDNS    kubelet does not have ClusterDNS IP configured and cannot create Pod using "ClusterFirst" policy. Falling back to DNSDefault policy.
+  36s        10s        2    kubelet, svr003            Warning        FailedSync        Error syncing pod
+```
+由上可以看出将 kubernetes-dashboard 指派给 svr003，查看 svr003 journalctl log，有如下信息：
+```
+Sep 07 12:25:21 svr003 kubelet[15990]: E0907 12:25:21.691981   15990 kuberuntime_manager.go:618] createPodSandbox for pod "kubernetes-dashboard-2767253535-2jmw7_kube-system(833e19c9-937e-11e7-be62-7ca23e9125c3)" failed: rpc error: code = 2 desc = unable to pull sandbox image "gcr.io/google_containers/pause-amd64:3.0": Error response from daemon: {"message":"Get https://gcr.io/v2/: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)"}
+Sep 07 12:25:21 svr003 kubelet[15990]: E0907 12:25:21.692021   15990 pod_workers.go:182] Error syncing pod 833e19c9-937e-11e7-be62-7ca23e9125c3 ("kubernetes-dashboard-2767253535-2jmw7_kube-system(833e19c9-937e-11e7-be62-7ca23e9125c3)"), skipping: failed to "CreatePodSandbox" for "kubernetes-dashboard-2767253535-2jmw7_kube-system(833e19c9-937e-11e7-be62-7ca23e9125c3)" with CreatePodSandboxError: "CreatePodSandbox for pod \"kubernetes-dashboard-2767253535-2jmw7_kube-system(833e19c9-937e-11e7-be62-7ca23e9125c3)\" failed: rpc error: code = 2 desc = unable to pull sandbox image \"gcr.io/google_containers/pause-amd64:3.0\": Error response from daemon: {\"message\":\"Get https://gcr.io/v2/: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)\"}"
+```
+:TODO
+
+## 附录
+### 命令
+- 删除对象：`kubectl delete node/pod/service NAME [--namespace=NS]`
+- 查看对象：`kubectl describe node/pod/service NAME [--namespace=NS]`
+
 
 ## 参考
 - [CentOS install Kubernetes](https://kubernetes.io/docs/getting-started-guides/centos/centos_manual_config/)
