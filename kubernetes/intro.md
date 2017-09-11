@@ -65,7 +65,6 @@
  svr001  | 192.168.100.10 | Master | etcd, API Server, Scheduler, Controller Manager
  svr002  | 192.168.100.11 | Node | Flannel, Docker, Kubelet, kube-proxy
  svr003  | 192.168.100.12 | Node | Flannel, Docker, Kubelet, kube-proxy
- svr004  | 192.168.100.13 | Node | Flannel, Docker, Kubelet, kube-proxy
 
 ### 安装 Kubernetes
 
@@ -89,7 +88,7 @@ $ sudo cp * /usr/bin
 #### Kubernetes Master 
 
 - 下载 [etcd](https://github.com/coreos/etcd/releases)，解压后将 etcd, etcdctl 移动到 /usr/bin 目录下。
-- 参考[kubernetes systemd](systemd)，将 etcd.service， kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下；将 [kuebernetes conf](etc) 中 config, apiserver 拷贝到 `/etc/kubernetes` 目录下，etcd.conf 拷贝到 `/etc/etcd` 中，并创建文件目录 ``/var/lib/etcd/default.etcd`，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip）。各 service 文件中指定启动 user 为 kube，因此还需要做如下操作：
+- 参考[kubernetes systemd](systemd)，将 etcd.service， kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下；将 [kuebernetes conf](etc) 中 config, apiserver 拷贝到 `/etc/kubernetes` 目录下，etcd.conf 拷贝到 `/etc/etcd` 中，并创建文件目录 `/var/lib/etcd/default.etcd`，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip）。各 service 文件中指定启动 user 为 kube，因此还需要做如下操作：
 ```
 $ sudo useradd kube
 $ sudo chown -R kube:kube /var/run/kubernetes
@@ -122,7 +121,7 @@ $ sudo docker run hello-world
 - 下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld 移动到 /usr/bin 目录下。~~同时将 kubernetes/cluster/centos/node/bin/remove-docker0.sh 移到 /usr/bin 目录下，该脚本用来删除 docker 默认网络，使用 flannel 网络~~。
 - 编辑 `/etc/sysconfig/flanneld`，内容如下：
 ```
-FLANNELD_ETCD_ENDPOINTS="http://srv001:2379"
+FLANNELD_ETCD_ENDPOINTS="http://svr001:2379"
 FLANNELD_ETCD_PREFIX="/kube/network"
 ```
 由于默认情况下，flanneld 会读取 etcd 上 `/coreos.com/network/config` 的配置，若想修改该配置，可通过`--etcd-prefix`（即配置中的 `FLANNEL_ETCD_PREFIX`）来覆盖该配置。 
@@ -146,9 +145,9 @@ done
 ```
 [admin@SVR7681HW2285 ~]$ kubectl get nodes
 NAME              STATUS     AGE       VERSION
-centos-minion-1   Ready      7m        v1.7.5
-centos-minion-2   Ready      3m        v1.7.5
-centos-minion-3   Ready      1m        v1.7.5
+srv001   Ready      7m        v1.7.5
+srv002   Ready      3m        v1.7.5
+srv003   Ready      1m        v1.7.5
 ```
 
 ## 报错
@@ -167,7 +166,7 @@ Error: Package: docker-ce-17.06.1.ce-1.el7.centos.x86_64 (docker-ce-stable)
 这个原因在 [Get Docker EE for Red Hat Enterprise Linux](https://docs.docker.com/engine/installation/linux/docker-ee/rhel/) 找到答案：
 > Enable the extras RHEL repository. This ensures access to the `container-selinux` package which is required by docker-ee.
 
-查看 /etc/yum.repos.d 中 extras 相关的repo文件，打开 extras 对应的 baseurl，未发现 `container-selinux`，查看 [CentOS7 extras repo](http://mirror.centos.org/centos/7/extras/x86_64/Packages/)，能找到 container-selinux-2.19 等，于是在 /etc/yum.repos.d 中新建 repo 源，拷贝阿里的 yum 源：`wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo`。再 `yum makecache`后，重新安装，解决问题。解决方法业已在 [Docs to be updated for container-selinux](https://github.com/docker/for-linux/issues/21)提及。
+查看 /etc/yum.repos.d 中 extras 相关的repo文件，打开 extras 对应的 baseurl，未发现 `container-selinux`，查看 [CentOS7 extras repo](http://mirror.centos.org/centos/7/extras/x86_64/Packages/)，能找到 container-selinux-2.19 等，于是在 /etc/yum.repos.d 中新建 repo 源，拷贝阿里的 yum 源：`wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo`。再 `yum makecache`后，重新安装，解决问题。解决方法在 [Docs to be updated for container-selinux](https://github.com/docker/for-linux/issues/21) 提及。
 
 ### Package does not match intended download
 一台机器在安装 docker 过程中报错：
@@ -186,7 +185,7 @@ Error downloading packages:
 ### Couldn't fetch network config: client: etcd cluster is unavailable or misconfigured
 配置完 flanneld，启动报错：`Couldn't fetch network config: client: etcd cluster is unavailable or misconfigured`，提示找不到 etcd 服务。查看 `/etc/sysconfig/flanneld`，内容为：
 ```
-FLANNEL_ETCD_ENDPOINTS="http://10.8.122.167:2379"
+FLANNEL_ETCD_ENDPOINTS="http://192.168.100.10:2379"
 FLANNEL_ETCD_PREFIX="/kube/network"
 ```
 

@@ -1,5 +1,6 @@
 # /etc/kubernetes/kubelet
 KUBELET_ADDRESS="--address=0.0.0.0"
 KUBELET_PORT="--port=10250"
-KUBELET_HOSTNAME="--hostname-override=centos-minion-X"
+# 若 KUBELET_HOSTNAME 值为 ""，则使用 Node 节点的 Hostname 做 Kubelet 的 Hostname。
+KUBELET_HOSTNAME="--hostname-override=NODE_HOSTNAME"
 KUBELET_API_SERVER="--api-servers=http://KUBE_MASTER:8080"
