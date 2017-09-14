@@ -140,12 +140,37 @@ done
 ```
 注：docker 需在 flanneld 启动成功后再启动。
 
+### 安装 DashBoard
+若按照 [官方文档](https://github.com/kubernetes/dashboard) 的方法执行`$ kubectl create -f https://git.io/kube-dashboard`，会因网络问题无法安装成功，所以需要使用其他方法。
+
+由于内网和墙的原因，无法访问镜像 `gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.3`。在 hub.docker.com 上找了下，有个 dashboard 的[镜像](https://hub.docker.com/r/siriuszg/kubernetes-dashboard-amd64/)。这里使用 v1.6.3，将该镜像上传到本地仓库，方便内网其他服务器访问：
+```
+$ sudo docker run -d -p 5000:5000 registry  # 运行本地仓库
+$ sudo docker pull siriuszg/kubernetes-dashboard-amd64:v1.6.3
+$ sudo docker tag siriuszg/kubernetes-dashboard-amd64:v1.6.3 svr001:5000/kubernetes-dashboard-amd64:v1.6.3
+$ sudo docker push svr001:5000/kubernetes-dashboard-amd64:v1.6.3
+// 在创建 pod 的过程中，会从 gcr.io 下载 helper 镜像，这里使用私有仓库做下中转
+$ sudo docker pull siriuszg/pause-amd64:3.0
+$ sudo docker tag siriuszg/pause-amd64:3.0 svr001:5000/pause-amd64:3.0   
+$ sudo docker push svr001:5000/pause-amd64:3.0
+$ sudo docker tag svr001:5000/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
+$ curl -X GET http://srv001:5000/v2/_catalog
+{"repositories":["kubernetes-dashboard-amd64","pause-amd64"]}
+```
+
+下载 [kubernetes-dashboard.yaml](https://git.io/kube-dashboard) 到本地，做如下修改：
+```
+image: svr001:5000/kubernetes-dashboard-amd64:v1.6.3   #将gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.3 替换为本地仓库镜像。
+- --apiserver-host=http://svr001:8080  # 指定 apiserver 地址
+```
+
+然后执行 `$ kubectl create -f kubernetes-dashboard.yaml`，即可在浏览器打开 dashboard。
+
 ## 使用
 安装完成后，在 Kubernetes Master 上执行：
 ```
-[admin@SVR7681HW2285 ~]$ kubectl get nodes
+[admin@svr001 ~]$ kubectl get nodes
 NAME              STATUS     AGE       VERSION
-srv001   Ready      7m        v1.7.5
 srv002   Ready      3m        v1.7.5
 srv003   Ready      1m        v1.7.5
 ```
@@ -197,7 +222,7 @@ FLANNEL_ETCD_PREFIX="/kube/network"
 ### misconfiguration: kubelet cgroup driver: "systemd" is different from docker cgroup driver: "cgroupfs"
 启动 kubelet 报错，通过 `sudo journalctl -u kubelet` 查看 log，有如下错误信息：
 ```
-Sep 06 16:39:50 SVR7679HW2285 kubelet[5731]: error: failed to run Kubelet: failed to create kubelet: misconfiguration: kubelet cgroup driver: "systemd" is different from docker cgroup driver: "cgroupfs"
+Sep 06 16:39:50 svr001 kubelet[5731]: error: failed to run Kubelet: failed to create kubelet: misconfiguration: kubelet cgroup driver: "systemd" is different from docker cgroup driver: "cgroupfs"
 ```
 
 查看 docker cgroup driver：
@@ -214,33 +239,35 @@ Cgroup Driver: cgroupfs
 
 
 ### no endpoints available for service \"kubernetes-dashboard\"
-启动 `kubectl proxy` 后，浏览器打开 http://KUBERNETES_MASTER:8080/ui/, 报错：`no endpoints available for service \"kubernetes-dashboard\"`。执行命令：
+启动 `kubectl proxy` 后，浏览器打开 http://KUBERNETES_MASTER:8080/ui/, 报错：`no endpoints available for service \"kubernetes-dashboard\"`。查看 log：
 ```
-$ kubectl describe pod kubernetes-dashboard-2767253535-2jmw7 --namespace=kube-system
-...
-Containers:
-  kubernetes-dashboard:
-    Container ID:
-    Image:       registry.cn-hangzhou.aliyuncs.com/magina-k8s/kubernetes-dashboard-amd64:v1.6.3
-    Image ID:
-    Port:        9090/TCP
-    State:        Waiting
-      Reason:        ContainerCreating
-    Ready:        False
-...
-Events:
-  FirstSeen    LastSeen    Count    From            SubObjectPath    Type        Reason            Message
-  ---------    --------    -----    ----            -------------    --------    ------            -------
-  51s        51s        1    default-scheduler            Normal        Scheduled        Successfully assigned kubernetes-dashboard-2572645387-dbh26 to svr003
-  51s        25s        2    kubelet, svr003            Warning        MissingClusterDNS    kubelet does not have ClusterDNS IP configured and cannot create Pod using "ClusterFirst" policy. Falling back to DNSDefault policy.
-  36s        10s        2    kubelet, svr003            Warning        FailedSync        Error syncing pod
+[admin@SVR7681HW2285 dashboard]$ kubectl logs kubernetes-dashboard-4159825443-1kd18 --namespace=kube-system
+Using HTTP port: 8443
+Using in-cluster config to connect to apiserver
+Could not init in cluster config: open /var/run/secrets/kubernetes.io/serviceaccount/token: no such file or directory
+Using random key for csrf signing
+No request provided. Skipping authorization header
+Error while initializing connection to Kubernetes apiserver. This most likely means that the cluster is misconfigured (e.g., it has invalid apiserver certificates or service accounts configuration) or the --apiserver-host param points to a server that does not exist. Reason: Could not create client config. Check logs for more information
+Refer to the troubleshooting guide for more information: https://github.com/kubernetes/dashboard/blob/master/docs/user-guide/troubleshooting.md
 ```
-由上可以看出将 kubernetes-dashboard 指派给 svr003，查看 svr003 journalctl log，有如下信息：
+知 apiserver 查找失败，重建各对象即可：
 ```
-Sep 07 12:25:21 svr003 kubelet[15990]: E0907 12:25:21.691981   15990 kuberuntime_manager.go:618] createPodSandbox for pod "kubernetes-dashboard-2767253535-2jmw7_kube-system(833e19c9-937e-11e7-be62-7ca23e9125c3)" failed: rpc error: code = 2 desc = unable to pull sandbox image "gcr.io/google_containers/pause-amd64:3.0": Error response from daemon: {"message":"Get https://gcr.io/v2/: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)"}
-Sep 07 12:25:21 svr003 kubelet[15990]: E0907 12:25:21.692021   15990 pod_workers.go:182] Error syncing pod 833e19c9-937e-11e7-be62-7ca23e9125c3 ("kubernetes-dashboard-2767253535-2jmw7_kube-system(833e19c9-937e-11e7-be62-7ca23e9125c3)"), skipping: failed to "CreatePodSandbox" for "kubernetes-dashboard-2767253535-2jmw7_kube-system(833e19c9-937e-11e7-be62-7ca23e9125c3)" with CreatePodSandboxError: "CreatePodSandbox for pod \"kubernetes-dashboard-2767253535-2jmw7_kube-system(833e19c9-937e-11e7-be62-7ca23e9125c3)\" failed: rpc error: code = 2 desc = unable to pull sandbox image \"gcr.io/google_containers/pause-amd64:3.0\": Error response from daemon: {\"message\":\"Get https://gcr.io/v2/: net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)\"}"
+$ kubectl delete -f kubernetes-dashboard.yaml
+$ kubectl create -f kubernetes-dashboard.yaml
 ```
-:TODO
+
+### docker push 时报错：http: server gave HTTP response to HTTPS client
+docker push 到本地仓库时，报错：`Get https://svr001:5000/v2/: http: server gave HTTP response to HTTPS client`，[解决方法](https://stackoverflow.com/questions/38695515/can-not-pull-push-images-after-update-docker-to-1-12) 如下：
+
+修改 `/etc/docker/daemon.json`，添加 `{ "insecure-registries":["myregistry.example.com:5000"] }`，修改后 daemon.json 内容如下：
+```
+{
+  "storage-driver": "devicemapper",
+  "insecure-registries":["svr001:5000"]
+}
+```
+
+然后重启 docker 和 registry，重新 push 镜像即可。
 
 ## 附录
 ### 命令
@@ -251,4 +278,4 @@ Sep 07 12:25:21 svr003 kubelet[15990]: E0907 12:25:21.692021   15990 pod_workers
 ## 参考
 - [CentOS install Kubernetes](https://kubernetes.io/docs/getting-started-guides/centos/centos_manual_config/)
 - [Get Docker CE for CentOS](https://docs.docker.com/engine/installation/linux/docker-ce/centos/)
-- [Kubernetes systemd](https://github.com/kubernetes/contrib/tree/master/init/systemd)
+- [Kubernetes systemd](docs/https://github.com/kubernetes/contrib/tree/master/init/systemd)
