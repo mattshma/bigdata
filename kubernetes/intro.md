@@ -62,13 +62,15 @@
 
  Hostname | IP | Role | Components
 ---------|-----|------|-------
- svr001  | 192.168.100.10 | Master | etcd, API Server, Scheduler, Controller Manager
+ svr001  | 192.168.100.10 | Master |Flannel, etcd, API Server, Scheduler, Controller Manager
  svr002  | 192.168.100.11 | Node | Flannel, Docker, Kubelet, kube-proxy
  svr003  | 192.168.100.12 | Node | Flannel, Docker, Kubelet, kube-proxy
 
-### 安装 Kubernetes
-
-安装 kubernetes 的方式较多，比如官网上使用 kubectl 进行安装；若希望开发或调试 kubernetes，可通过编译安装；使用 kubeadm 可以学习官方在集群配置方面的一些最佳实践，不过该方法目前仍在测试版本中，因此不能用于正式环境使用。这里使用[二进制预编译包](https://github.com/kubernetes/kubernetes/releases)安装。在各节点上下载最新版 kubernetes 后解压，如下：
+### 安装步骤
+安装 kubernetes 的方式较多，比如官网上使用 kubectl 进行安装；若希望开发或调试 kubernetes，可通过编译安装；使用 kubeadm 可以学习官方在集群配置方面的一些最佳实践，不过该方法目前仍在测试版本中，因此不能用于正式环境使用。这里使用[二进制预编译包](https://github.com/kubernetes/kubernetes/releases)安装。
+#### 通用服务
+- 安装 kubernetes
+在各节点上下载最新版 kubernetes 后解压，如下：
 ```
 $ cd kubernetes/cluster
 // 若需设置 proxy 才能访问外网，可先在 get-kube-binaries.sh 中进行设置 export https_proxy=http://SERVER:PROT/
@@ -82,11 +84,17 @@ $ rm *.tar *_tag
 $ sudo chmod 755 *
 $ sudo cp * /usr/bin
 ```
+- 下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld 移动到 /usr/bin 目录下。~~同时将 kubernetes/cluster/centos/node/bin/remove-docker0.sh 移到 /usr/bin 目录下，该脚本用来删除 docker 默认网络，使用 flannel 网络~~。将 [kubernetes systemd](systemd) 中的 flanneld.service 拷贝到 `/usr/lib/systemd/system`。
+- 编辑 `/etc/sysconfig/flanneld`，内容如下：
+```
+FLANNELD_ETCD_ENDPOINTS="http://svr001:2379"
+FLANNELD_ETCD_PREFIX="/kube/network"
+```
+由于默认情况下，flanneld 会读取 etcd 上 `/coreos.com/network/config` 的配置，若想修改该配置，可通过`--etcd-prefix`（即配置中的 `FLANNEL_ETCD_PREFIX`）来覆盖该配置。 
+
 
 根据角色不同，以下分别叙述 Kubernetes Master 和 Kubernetes Node 上的部署。
-
 #### Kubernetes Master 
-
 - 下载 [etcd](https://github.com/coreos/etcd/releases)，解压后将 etcd, etcdctl 移动到 /usr/bin 目录下。
 - 参考[kubernetes systemd](systemd)，将 etcd.service， kube-apiserver.service，kube-controller-manager.service 和 kube-scheduler.service 拷贝到 `/usr/lib/systemd/system` 目录下；将 [kuebernetes conf](etc) 中 config, apiserver 拷贝到 `/etc/kubernetes` 目录下，etcd.conf 拷贝到 `/etc/etcd` 中，并创建文件目录 `/var/lib/etcd/default.etcd`，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip）。各 service 文件中指定启动 user 为 kube，因此还需要做如下操作：
 ```
@@ -117,18 +125,12 @@ $ yum list docker-ce.x86_64  --showduplicates | sort -r
 $ sudo systemctl start docker
 $ sudo docker run hello-world
 ```
+由于使用了 flanneld，若 `/usr/lib/systemd/system/docker.service` 中没使用 flannel 生成的参数，则还需要配置。参考 [systemd](systemd) 中的 docker.service 文件。
 若 yum 无法访问外网，可在 /etc/yum.conf 中设置 proxy 代理；若 docker 无法访问外网，参考 [Control and configure Docker with systemd](https://docs.docker.com/engine/admin/systemd/) 设置代理。
-- 下载 [flannel](https://github.com/coreos/flannel/releases)，解压后将 flanneld 移动到 /usr/bin 目录下。~~同时将 kubernetes/cluster/centos/node/bin/remove-docker0.sh 移到 /usr/bin 目录下，该脚本用来删除 docker 默认网络，使用 flannel 网络~~。
-- 编辑 `/etc/sysconfig/flanneld`，内容如下：
-```
-FLANNELD_ETCD_ENDPOINTS="http://svr001:2379"
-FLANNELD_ETCD_PREFIX="/kube/network"
-```
-由于默认情况下，flanneld 会读取 etcd 上 `/coreos.com/network/config` 的配置，若想修改该配置，可通过`--etcd-prefix`（即配置中的 `FLANNEL_ETCD_PREFIX`）来覆盖该配置。 
 - 在 etcd 中配置网络。
 执行命令：`etcdctl set /kube/network/config '{"Network": "10.10.0.0/16", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'`。
 flannel 默认 Backend 为 `udp`，[由于 udp 只能用于 debug](https://coreos.com/flannel/docs/latest/backends.html)，所以这里修改为 `vxlan`，另外注意 etcd 中 value 为 JSON 格式。
-- 将 [kubernetes systemd](systemd) 中的 flanneld.service， kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip），修改 kubelet 中 `KUBELET_HOSTNAME` 值。
+- 将 [kubernetes systemd](systemd) 中的 kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip），修改 kubelet 中 `KUBELET_HOSTNAME` 值。
 - 启动服务：
 ```
 $ sudo systemctl daemon-reload
@@ -164,16 +166,9 @@ image: svr001:5000/kubernetes-dashboard-amd64:v1.6.3   #将gcr.io/google_contain
 - --apiserver-host=http://svr001:8080  # 指定 apiserver 地址
 ```
 
-然后执行 `$ kubectl create -f kubernetes-dashboard.yaml`，即可在浏览器打开 dashboard。
+然后执行 `$ kubectl create -f kubernetes-dashboard.yaml`，即可在浏览器打开 dashboard。如下：
 
-## 使用
-安装完成后，在 Kubernetes Master 上执行：
-```
-[admin@svr001 ~]$ kubectl get nodes
-NAME              STATUS     AGE       VERSION
-srv002   Ready      3m        v1.7.5
-srv003   Ready      1m        v1.7.5
-```
+![dashboard](img/dashboard_overview.png)
 
 ## 报错
 在安装过程中，有如下几个报错，以下分别是解决过程
@@ -276,13 +271,20 @@ Error: 'dial tcp 172.17.0.3:9090: getsockopt: no route to host'
 Trying to reach: 'http://172.17.0.3:9090/'
 ```
 
-网上查找了下，说是重启 docker 即可，重启后无效。在 ApiServer 这台机器上 ping 该 ip，ping 不通，即 Master 与 Node 中各容器网络不通，Node 间节点以 flannel 通信，即 Master 也需要部署 flannel 服务。
+网上查找了下，说是重启 docker 即可，重启后无效。在 ApiServer 这台机器上 ping 该 ip，ping 不通，即 Master 与 Node 中各容器网络不通，Node 间节点以 flannel 通信，即 Master 也需要部署 flannel 服务。删除 flanneld 命令如下：
+```
+ifconfig flannel.1 down
+ip link delete flannel.1 
+```
+部署完成后，重启 kubelet 和 kube-proxy，重新部署 Dashboard 即可访问。
+
 
 ## 附录
 ### 命令
-- 删除对象：`kubectl delete node/pod/service NAME [--namespace=NS]`
-- 查看对象：`kubectl describe node/pod/service NAME [--namespace=NS]`
-
+- 删除对象：`kubectl delete node/pod/svc NAME [--namespace=NS]`
+- 查看对象：`kubectl describe node/pod/svc NAME [--namespace=NS]`
+- 查看 namespace 下的所有pod：`kubectl get pods --namespace=NS -o wide`
+- 查看某 pod log：`kubectl logs POD_NAME --namespace=NS`
 
 ## 参考
 - [CentOS install Kubernetes](https://kubernetes.io/docs/getting-started-guides/centos/centos_manual_config/)
