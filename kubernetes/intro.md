@@ -269,6 +269,15 @@ docker push 到本地仓库时，报错：`Get https://svr001:5000/v2/: http: se
 
 然后重启 docker 和 registry，重新 push 镜像即可。
 
+### dial tcp 172.17.0.3:9090: getsockopt: no route to host
+报错：
+```
+Error: 'dial tcp 172.17.0.3:9090: getsockopt: no route to host'
+Trying to reach: 'http://172.17.0.3:9090/'
+```
+
+网上查找了下，说是重启 docker 即可，重启后无效。在 ApiServer 这台机器上 ping 该 ip，ping 不通，即 Master 与 Node 中各容器网络不通，Node 间节点以 flannel 通信，即 Master 也需要部署 flannel 服务。
+
 ## 附录
 ### 命令
 - 删除对象：`kubectl delete node/pod/service NAME [--namespace=NS]`

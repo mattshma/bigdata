@@ -6,10 +6,9 @@ Wants=network-online.target
 
 [Service]
 Type=notify
-# the default is not to use systemd for cgroups because the delegate issues still
-# exists and systemd currently does not support the cgroup feature set required
-# for containers run by docker
-ExecStart=/usr/bin/dockerd
+# 注意：需和 flanneld.service 中 mk-docker-opts.sh 生成的文件路径一致。
+EnvironmentFile=/run/flannel/docker
+ExecStart=/usr/bin/dockerd $DOCKER_NETWORK_OPTIONS
 ExecReload=/bin/kill -s HUP $MAINPID
 # Having non-zero Limit*s causes performance problems due to accounting overhead
 # in the kernel. We recommend using cgroups to do container-local accounting.
