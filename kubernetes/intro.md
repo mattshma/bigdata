@@ -20,7 +20,9 @@
   - Endpoints Controller: 产生 endpoint 对象。
   - Service Account & Token Controller: 创建账户和 token。
 - kube-scheduler    
-  给创建的 pod 指定 node
+  给创建的 pod 指定 node。
+- flannel  
+  网络类型，用于与容器通信。
 
 ### node 组件
 - kubelet    
@@ -29,7 +31,7 @@
   管理 service 的入口，kube-proxy 允许 kubernetes 服务进行网络连接的转发。
 - docker   
   用来运行容器。
-- flanneld   
+- flannel     
   设置 docker 网络。
 
 ## 安装
@@ -231,25 +233,6 @@ Cgroup Driver: cgroupfs
 ### 启动 flanneld 后，服务器无法登录
 
 在折腾这么久后，以为马上就能成功了，结果重启 flanneld 后，通过跳板机无法登录该服务器了，ping 仍能ping通。刚好之前将 Master 的 ssh key 加到了该机器中，通过 Matser 能登录，发现 `ip a` 有 flannel.1 信息，但 `systemctl status flanneld` 显示 flanneld 启动失败。查看路由，发现 etcd 中设置的网段所在的路由刚好比正常跳板机到该机器的路由优先级高，重新设置 etcd 中的 `/kube/network/config` 中的 Network 为其他网段即可。
-
-
-### no endpoints available for service \"kubernetes-dashboard\"
-启动 `kubectl proxy` 后，浏览器打开 http://KUBERNETES_MASTER:8080/ui/, 报错：`no endpoints available for service \"kubernetes-dashboard\"`。查看 log：
-```
-[admin@SVR7681HW2285 dashboard]$ kubectl logs kubernetes-dashboard-4159825443-1kd18 --namespace=kube-system
-Using HTTP port: 8443
-Using in-cluster config to connect to apiserver
-Could not init in cluster config: open /var/run/secrets/kubernetes.io/serviceaccount/token: no such file or directory
-Using random key for csrf signing
-No request provided. Skipping authorization header
-Error while initializing connection to Kubernetes apiserver. This most likely means that the cluster is misconfigured (e.g., it has invalid apiserver certificates or service accounts configuration) or the --apiserver-host param points to a server that does not exist. Reason: Could not create client config. Check logs for more information
-Refer to the troubleshooting guide for more information: https://github.com/kubernetes/dashboard/blob/master/docs/user-guide/troubleshooting.md
-```
-知 apiserver 查找失败，重建各对象即可：
-```
-$ kubectl delete -f kubernetes-dashboard.yaml
-$ kubectl create -f kubernetes-dashboard.yaml
-```
 
 ### docker push 时报错：http: server gave HTTP response to HTTPS client
 docker push 到本地仓库时，报错：`Get https://svr001:5000/v2/: http: server gave HTTP response to HTTPS client`，[解决方法](https://stackoverflow.com/questions/38695515/can-not-pull-push-images-after-update-docker-to-1-12) 如下：

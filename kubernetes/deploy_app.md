@@ -180,7 +180,7 @@ redis-master   1         1         1            1           21h       master    
 redis-slave    2         2         2            2           31m       slave          kubeguide/guestbook-redis-slave    app=redis,role=slave,tier=backend
 ```
 
-在浏览器上打开 http://svr002:30001，页面如下：
+在浏览器上打开 http://svr002:30001 ，页面如下：
 
 ![Web 留言板](img/redis_helloworld.png)
 
