@@ -119,6 +119,8 @@ spec:
 
 执行 `kubectl create -f redis-slave.yml` 创建 Deployment 和 Service，由于 Redis Master 创建的 IP 是由 Kubernetes 自动分配的，其他 Pod 无法预知某个 Service 的虚拟 IP，对于这种情况，Kubernetes 提供了 ENV 和 DNS 两种方式来解决。由于 DNS 服务还未搭建，因此这里使用 ENV 的方式。使用的 kubeguide 的镜像使用 GET_HOSTS_FROM 来获取 Redis  Master 地址。
 
+如何验证 Redis Slave 是否与 Redis Master 通信成功呢？在启动 Redis Slave 的机器，通过 `sudo docker container` 查看 Redis Slave 对应的镜像 ID，然后使用 `sudo docker logs CONTAINER_ID` 即可查看 Redis Log，Log 中可以看到与 Master 的通信记录。
+
 ### 部署 Frontend 服务
 新建 frontend.yml 文件，内容如下：
 ```
