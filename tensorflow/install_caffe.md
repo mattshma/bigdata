@@ -10,7 +10,7 @@
 >- CUDA is required for GPU mode.
 >   - library version 7+ and the latest driver version are recommended, but 6.* is fine too
 >   - 5.5, and 5.0 are compatible but considered legacy
-> cuDNN Caffe: for fastest operation Caffe is accelerated by drop-in integration of NVIDIA cuDNN. To speed up your Caffe models, install cuDNN then uncomment the USE_CUDNN := 1 flag in Makefile.config when installing Caffe. Acceleration is automatic. The current version is cuDNN v6; older versions are supported in older Caffe.
+>- cuDNN Caffe: for fastest operation Caffe is accelerated by drop-in integration of NVIDIA cuDNN. To speed up your Caffe models, install cuDNN then uncomment the USE_CUDNN := 1 flag in Makefile.config when installing Caffe. Acceleration is automatic. The current version is cuDNN v6; older versions are supported in older Caffe.
 >
 
 cuda 版本支持 7.0 以上，cuDNN 目前只支持到 v6，故 cuDNN v7.0.3 目前暂不支持，替换为安装 cuda 8.0，cuDNN v5.1（v5.1 和 v6.0 均可，这里由于caffe 版本略老，之前安装 cuDNN 版本为 v5.1，故本次安装也选择 v5.1，v6 的安装过程应该大致相同），重新安装。
