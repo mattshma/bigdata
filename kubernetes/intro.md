@@ -132,7 +132,7 @@ $ sudo docker run hello-world
 - 在 etcd 中配置网络。
 执行命令：`etcdctl set /kube/network/config '{"Network": "10.10.0.0/16", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'`。
 flannel 默认 Backend 为 `udp`，[由于 udp 只能用于 debug](https://coreos.com/flannel/docs/latest/backends.html)，所以这里修改为 `vxlan`，另外注意 etcd 中 value 为 JSON 格式。
-- 将 [kubernetes systemd](systemd) 中的 kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip），修改 kubelet 中 `KUBELET_HOSTNAME` 值。
+- 将 [kubernetes systemd](systemd) 中的 kubelet.service 和 kube-proxy.service 拷贝到 `/usr/lib/systemd/system` 目录下，新建目录 `/etc/kubernetes`，将 [kubernetes conf](etc) 中的 config，kubelet，proxy 拷贝到 `/etc/kubernetes` 目录下，修改变量 `KUBE_MASTER` 为 Master Hostname（或ip），修改 kubelet 中 `KUBELET_HOSTNAME` 值。*根据 `kubelet.service` 中设置的 WorkingDirectory，创建对立目录 `/var/lib/kubelet`*。
 - 启动服务：
 ```
 $ sudo systemctl daemon-reload
@@ -143,6 +143,12 @@ $ for SERVICES in kube-proxy kubelet flanneld docker; do
 done
 ```
 注：docker 需在 flanneld 启动成功后再启动。
+- 各 Node 节点配置 kubectl，如下：
+```
+$ kubectl config set-cluster default-cluster --server=http://svr001:8080
+$ kubectl config set-context default-context --cluster=default-cluster --user=default-admin
+$ kubectl config use-context default-context
+```
 
 ### 安装 DashBoard
 若按照 [官方文档](https://github.com/kubernetes/dashboard) 的方法执行`$ kubectl create -f https://git.io/kube-dashboard`，会因网络问题无法安装成功，所以需要使用其他方法。
@@ -261,6 +267,8 @@ ip link delete flannel.1
 ```
 部署完成后，重启 kubelet 和 kube-proxy，重新部署 Dashboard 即可访问。
 
+### Failed at step CHDIR spawning /usr/bin/kubelet: No such file or directory
+执行命令 `sudo systemctl restart kubelet`，报错：`Failed at step CHDIR spawning /usr/bin/kubelet: No such file or directory`，查看 `/usr/bin/kubelet` 是存在的，检查配置文件，发现 kubelet.service 中定义的 WorkingDirectory 未创建，创建后重启成功。
 
 ## 附录
 ### 命令

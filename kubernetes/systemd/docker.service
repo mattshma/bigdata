@@ -8,6 +8,10 @@ Wants=network-online.target
 Type=notify
 # 注意：需和 flanneld.service 中 mk-docker-opts.sh 生成的文件路径一致。
 EnvironmentFile=/run/flannel/docker
+### 其他 Docker 启动参数可以在 /etc/sysconfig/docker 中配置
+# EnvironmentFile=-/etc/sysconfig/docker
+### OPTIONS 在 /etc/sysconfig/docker 定义
+# ExecStart=/usr/bin/dockerd $DOCKER_NETWORK_OPTIONS $OPTIONS
 ExecStart=/usr/bin/dockerd $DOCKER_NETWORK_OPTIONS
 ExecReload=/bin/kill -s HUP $MAINPID
 # Having non-zero Limit*s causes performance problems due to accounting overhead
