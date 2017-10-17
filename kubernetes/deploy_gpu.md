@@ -101,7 +101,7 @@ spec:
         - containerPort: 8888
         resources:
           limits:
-            alpha.kubernetes.io/nvidia-gpu: 1
+            alpha.kubernetes.io/nvidia-gpu: 2
         volumeMounts:
         - mountPath: /usr/local/nvidia/bin
           name: bin
@@ -132,7 +132,7 @@ def get_available_devices():
     return [x.name for x in local_device_protos]
 
 print(get_available_devices())
-[u'/cpu:0', u'/gpu:0', u'/gpu:1', u'/gpu:2', u'/gpu:3']
+[u'/cpu:0', u'/gpu:0', u'/gpu:1']
 ```
 
 注意: tensorflow 镜像不要使用 tag 为 devel-gpu ，可能出现启动不了的情况。
