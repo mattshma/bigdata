@@ -1,0 +1,116 @@
+FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+
+# reference: https://github.com/tensorflow/tensorflow/blob/r1.3/tensorflow/tools/docker/Dockerfile.gpu
+
+ENV PASSWD='sha1:ee6b310274f3:50c3c1ea4673a5a92401a176f88daec6ccb77e58' \
+    NB_USER=jovyan \
+    NB_UID=1000 \
+    NB_GID=100 
+
+# Pick up some TF dependencies
+RUN sed -i 's/http:\/\/archive\.ubuntu\.com\//http:\/\/mirrors\.aliyun\.com\//g' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libssl-dev \
+    libffi-dev \
+    libfreetype6-dev \
+    libpng12-dev \
+    libzmq3-dev \
+    pkg-config \
+    python \
+    python-dev \
+    python-pip \
+    python-setuptools \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-setuptools \
+    rsync \
+    software-properties-common \
+    unzip \
+    vim && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Python 2
+RUN pip install --no-cache-dir -i http://pypi.doubanio.com/simple --trusted-host=pypi.doubanio.com  \
+    setuptools \
+    ipython==5.5.0 \
+    ipywidgets \
+    mock \
+    seaborn \
+    sympy \
+    cython \
+    patsy \
+    statsmodels \
+    cloudpickle \
+    dill \
+    numba \
+    bokeh \
+    pyzmq \
+    Pillow \
+    ipykernel \
+    h5py \
+    jupyter \
+    matplotlib \
+    numpy \
+    pandas \
+    scipy \
+    sklearn \
+    scikit-image \
+    keras \
+    protobuf && \
+    pip install --no-cache-dir http://pypi.doubanio.com/packages/ca/c4/e39443dcdb80631a86c265fb07317e2c7ea5defe73cb531b7cd94692f8f5/tensorflow_gpu-1.3.0-cp27-cp27mu-manylinux1_x86_64.whl#md5=c476a9ae1227fb072a781866bd77e7f7 && \
+    python -m ipykernel install
+
+# Python 3
+RUN pip3 install --no-cache-dir -i http://pypi.doubanio.com/simple --trusted-host=pypi.doubanio.com  \
+    ipywidgets \
+    mock \
+    seaborn \
+    sympy \
+    cython \
+    patsy \
+    statsmodels \
+    cloudpickle \
+    dill \
+    numba \
+    bokeh \
+    pyzmq \
+    Pillow \
+    h5py \
+    jupyter \
+    matplotlib \
+    numpy \
+    pandas \
+    scipy \
+    sklearn \
+    scikit-image \
+    keras \
+    protobuf && \
+    pip3 install --no-cache-dir http://pypi.doubanio.com/packages/ad/bd/bb96a3203296fa4400e51068d48824efeb72922a5608300bdcceafb38eaa/tensorflow_gpu-1.3.0-cp35-cp35m-manylinux1_x86_64.whl#md5=5c1a79023cf04f1b4964595bf769b8a4
+
+RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER
+
+ENV LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64:/usr/lib64/nvidia:$LD_LIBRARY_PATH \
+    HOME=/home/$NB_USER
+
+USER $NB_USER
+
+RUN mkdir /home/$NB_USER/work
+
+# Set up our notebook config.
+# COPY jupyter_notebook_config.py /root/.jupyter/
+COPY jupyter_notebook_config.py $HOME/.jupyter/
+
+USER root
+
+COPY run_jupyter.sh /
+
+EXPOSE 8888 6006
+
+WORKDIR $HOME/work
+
+CMD ["sh", "-c", "/run_jupyter.sh", "--allow-root"]
