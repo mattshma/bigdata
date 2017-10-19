@@ -149,6 +149,23 @@ $ kubectl config set-cluster default-cluster --server=http://svr001:8080
 $ kubectl config set-context default-context --cluster=default-cluster --user=default-admin
 $ kubectl config use-context default-context
 ```
+或在用户根目录下，创建 `~/.kube/config`，内容如下：
+```
+apiVersion: v1
+clusters:
+- cluster:
+    server: http://svr001:8080
+  name: default-cluster
+contexts:
+- context:
+    cluster: default-cluster
+    user: default-admin
+  name: default-context
+current-context: default-context
+kind: Config
+preferences: {}
+users: []
+```
 
 ### 安装 DashBoard
 若按照 [官方文档](https://github.com/kubernetes/dashboard) 的方法执行`$ kubectl create -f https://git.io/kube-dashboard`，会因网络问题无法安装成功，所以需要使用其他方法。
