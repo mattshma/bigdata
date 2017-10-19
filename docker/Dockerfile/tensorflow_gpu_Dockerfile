@@ -2,8 +2,7 @@ FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
 
 # reference: https://github.com/tensorflow/tensorflow/blob/r1.3/tensorflow/tools/docker/Dockerfile.gpu
 
-ENV PASSWD='sha1:ee6b310274f3:50c3c1ea4673a5a92401a176f88daec6ccb77e58' \
-    NB_USER=jovyan \
+ENV NB_USER=jovyan \
     NB_UID=1000 \
     NB_GID=100 
 
@@ -102,7 +101,6 @@ USER $NB_USER
 RUN mkdir /home/$NB_USER/work
 
 # Set up our notebook config.
-# COPY jupyter_notebook_config.py /root/.jupyter/
 COPY jupyter_notebook_config.py $HOME/.jupyter/
 
 USER root
