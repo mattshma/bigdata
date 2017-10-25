@@ -60,7 +60,7 @@ $ sudo systemctl restart docker
 
 接着安装 nvidia-docker，如下：
 ```
-$ Install nvidia-docker and nvidia-docker-plugin
+// Install nvidia-docker and nvidia-docker-plugin
 $ wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker-1.0.1-1.x86_64.rpm
 $ sudo rpm -i /tmp/nvidia-docker*.rpm && rm /tmp/nvidia-docker*.rpm
 $ sudo systemctl start nvidia-docker
