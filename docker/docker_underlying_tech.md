@@ -118,7 +118,68 @@ cgroups v2 同 v1 有如下区别：
 
 Docker 最开始使用 AUFS 文件系统做为存储，虽然后来版本改用其他文件系统，不过这里仍以 AUFS 为例子讲解 UnionFS。AUFS 基于 UnionFS 实现，并引入了一些新的功能。AUFS 的branch 可以是 read-only, read-write 或 whiteout-able 等权限。对于 read-only 目录只能读，写操作都是在 read-write 目录进行，重点在于，写操作是在 read-only 层上的一种增量操作，不影响 read-only 目录。挂载目录严格按照各目录间的增量关系，将被增量目录优于增量目录挂载，即最上层目录始终是 read-write 属性。
 
+### AUFS 测试
+测试基于 Ubuntu 16.04。创建三个子目录：
+- base 作为底层目录
+- top 作为上层目录
+- mnt 作为 aufs 的挂载目录
 
+然后创建如下几个文件：
+```
+$ tree
+.
+├── base
+│   ├── common.txt
+│   └── foo.txt
+├── mnt
+└── top
+    ├── bar.txt
+    └── common.txt
+```
+文件中输入相应内容。接下来使用 aufs 将 base 和 top 一起 mount 到 mnt 目录：
+```
+$ sudo mount -t aufs -o br=./top:./base none ./mnt
+```
+
+-t 即 mount 类型，-o 即传递给 aufs 的选项，br 表示 branch，即 base 和 top 这两个目录，默认情况下`-o`后面的第一个目录为可写可读目录，剩下目录为只读目录。 none为设备名，由于这里是文件夹，因此这里可为空。 
+
+挂载后再次查看目录结构
+```
+tree
+.
+├── base
+│   ├── common.txt
+│   └── foo.txt
+├── mnt
+│   ├── bar.txt
+│   ├── common.txt
+│   └── foo.txt
+└── top
+    ├── bar.txt
+    └── common.txt
+```
+可以发现 mnt 内容为 base 和 top 两个目录的综合，修改 mnt/common.txt 中内容，发现 top/common.txt 的内容变化，而 base/common.txt  不变，说明挂载点的变更发生在 top 目录中。
+
+接着在 mnt 中编辑 foo.txt，此时 base/foo.txt 内容没变，而是在新建了一个 top/foo.txt 文件。如下：
+```
+$ tree
+.
+├── base
+│   ├── common.txt
+│   └── foo.txt
+├── mnt
+│   ├── bar.txt
+│   ├── common.txt
+│   └── foo.txt
+└── top
+    ├── bar.txt
+    ├── common.txt
+    └── foo.txt
+```
+
+综上可以看到，在写操作中， aufs 会从上往下查找文件，若发现最上层存在相应文件，则直接写入，若目标文件位于下层只读层，则对这些层的修改都会反应在最上层新建的该文件中。
+
+### Docker AUFS 简介
 典型的 Linux 启动需要运行两个 FS -- bootfs 和 rootfs。
 
 ![linux_fs](image/linux_fs.png)
@@ -146,6 +207,7 @@ Linux 在启动后，首先将 rootfs 设置为read-only，然后进行一系列
 ![docker_container](image/linux_6.png)
 
 
+本文为初稿，后续会更加详细的说明各个底层技术。
 
 ## 参考
 - [NAMESPACES man](http://man7.org/linux/man-pages/man7/namespaces.7.html)
@@ -153,3 +215,4 @@ Linux 在启动后，首先将 rootfs 设置为read-only，然后进行一系列
 - [CGROUPS](http://man7.org/linux/man-pages/man7/cgroups.7.html)
 - [CGROUPS](https://www.kernel.org/doc/Documentation/cgroup-v1/cgroups.txt)
 - [Control Group v2](https://www.kernel.org/doc/Documentation/cgroup-v2.txt)
+- [DOCKER基础技术：AUFS](https://coolshell.cn/articles/17061.html)
