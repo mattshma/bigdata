@@ -78,6 +78,7 @@ mkdir build
 cd build 
 cmake ..
 make all -j32
+make pycaffe
 make install
 ```
 
