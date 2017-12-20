@@ -31,22 +31,37 @@ Sat Sep 30 11:09:10 2017
 由于需要安装的 caffe 版本为 1.0.0-rc3，这里下载 [cuDNN v5.1](https://developer.nvidia.com/rdp/cudnn-download)，cuDNN 的下载需要注册。安装：
 ```
 $ tar xzvf cudnn-8.0-linux-x64-v5.1.tgz
-$ cp include/* /usr/local/cuda/include
-$ cp lib64/* /usr/local/cuda/lib64
+$ sudo cp cuda/include/* /usr/local/cuda/include
+$ sudo cp cuda/lib64/* /usr/local/cuda/lib64
 ```
 
 ### 安装 BLAS
 这里安装 ATLAS:
 ```
-sudo yum install atlas-devel 
+sudo yum install atlas-devel
 cd  /usr/lib64/atlas 
 sudo ln -sv libsatlas.so.3.10 libcblas.so
 sudo ln -sv libsatlas.so.3.10 libatlas.so
 ```
 
+### 重装低于 1.54 的 boost 
+若 boost 版本低于 1.54，则需要重装boost，过程如下：
+```
+# yum remove boost-devel
+# wget https://netix.dl.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.gz
+# tar xvzf boost_1_55_0.tar.gz
+# cd boost_1_55_0
+# ./bootstrap.sh
+# ./b2
+# ./b2 install -j28  threading=multi --layout=tagged  --prefix=/opt/boost
+# cd /opt/boost
+# cp -r include/ /usr/include
+# cp lib/* /usr/lib64
+```
+
 ### 安装 caffe
-- 参考 [Prerequisites](http://caffe.berkeleyvision.org/installation.html#prerequisites)，安装依赖：`sudo yum install protobuf-devel glog-devel gflags-devel hdf5-devel lmdb-devel leveldb-devel snappy-devel opencv-devel boost-devel`。
-- 接着下载 [caffe](git clone https://github.com/BVLC/caffe.git)，进入 caffe/python 目录，安装 Python 依赖：`for r in $(cat requirements.txt); do pip install $r; done`.
+- 参考 [Prerequisites](http://caffe.berkeleyvision.org/installation.html#prerequisites)，安装依赖：`sudo yum install protobuf-devel glog-devel gflags-devel hdf5-devel lmdb-devel leveldb-devel snappy-devel opencv-devel boost-devel openblas-devel`。
+- 接着下载 caffe: `git clone https://github.com/BVLC/caffe.git`，进入 caffe/python 目录，安装 Python 依赖：`for r in $(cat requirements.txt); do pip install $r; done`.
 - 生成 Makefile.config 文件：`cp Makefile.config.example Makefile.config`，并做如下修改：
 ```
 USE_CUDNN := 1
@@ -63,7 +78,14 @@ mkdir build
 cd build 
 cmake ..
 make all -j32
+make pycaffe
 make install
+```
+
+修改 `/etc/bashrc`，添加如下行：
+```
+export PATH=$PATH:$CUDA_HOME/bin:/opt/caffe/build/tools
+export PYTHONPATH=$PYTHONPATH:/opt/caffe/python
 ```
 
 若 cmake 时报错：
@@ -79,8 +101,22 @@ make: *** [.build_release/tools/upgrade_net_proto_text.bin] Error 1
 collect2: error: ld returned 1 exit status
 make: *** [.build_release/tools/train_net.bin] Error 1
 ```
-
 可将命令修改为：`cmake -D GFLAGS_LIBRARY=/usr/local/lib/libgflags.a  ..`。
+
+若报错：
+```
+-- OpenCV found (/usr/lib64/cmake/OpenCV)
+CMake Error at /usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake:108 (message):
+  Could NOT find Atlas (missing: Atlas_CBLAS_LIBRARY Atlas_BLAS_LIBRARY
+  Atlas_LAPACK_LIBRARY)
+Call Stack (most recent call first):
+  /usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake:315 (_FPHSA_FAILURE_MESSAGE)
+  cmake/Modules/FindAtlas.cmake:43 (find_package_handle_standard_args)
+  cmake/Dependencies.cmake:113 (find_package)
+  CMakeLists.txt:46 (include)
+```
+执行：`cmake -DBLAS=open .. `。
+
 
 安装完成后，在 `build/tools` 中可找到 caffe 相关可执行文件，在 python 中，caffe 模块也已安装。至此安装完成。
 

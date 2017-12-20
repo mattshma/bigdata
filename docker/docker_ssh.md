@@ -10,14 +10,17 @@ FROM centos:centos7
 
 RUN yum -y update; yum clean all
 RUN yum -y install openssh-server passwd; yum clean all
-ADD ./start.sh /start.sh
 RUN mkdir /var/run/sshd
 
 RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N '' 
 
-RUN chmod 755 /start.sh
 # EXPOSE 22
-RUN ./start.sh
+ENV USER jovyan
+ENV SSH_PASSWD 123
+
+COPY start.sh /start.sh
+
+RUN ./start.sh $USER $SSH_PASSWD
 ENTRYPOINT ["/usr/sbin/sshd", "-D"]
 ```
 
@@ -28,29 +31,29 @@ start.sh 如下：
 __create_user() {
 # Create a user to SSH into as.
 
-USER=user
-SSH_USERPASS=newpass
+USER=$1
+SSH_USERPASS=$2
 useradd $USER
 echo -e "$SSH_USERPASS\n$SSH_USERPASS" | (passwd --stdin $USER)
 echo $USER user password: $SSH_USERPASS
 }
 
 # Call all functions
-__create_user
+__create_user $1 $2
 ```
-上述 user 和 newpass 为自定义变量。
+设置该脚本权限为 `755`。
 
 然后按以下步骤操作：
-- 打包：`# docker build --rm -t <username>/ssh:centos7 .`。
-- 运行容器：`# docker run -d -p 22 <username>/ssh:centos7`。
+- 打包：`# docker build --rm -t centos7:ssh .`。
+- 运行容器：`# docker run -d -p 22 centos7:ssh`。
 - 获取容器端口信息：
 ```
 # docker ps
 CONTAINER ID        IMAGE                 COMMAND             CREATED             STATUS              PORTS                   NAMES
-8c82a9287b23        <username>/ssh:centos7   /usr/sbin/sshd -D   4 seconds ago       Up 2 seconds        0.0.0.0:49154->22/tcp   mad_mccarthy        
+8c82a9287b23        centos7:ssh   /usr/sbin/sshd -D   4 seconds ago       Up 2 seconds        0.0.0.0:49154->22/tcp   mad_mccarthy        
 ```
-- 通过 ssh 登录：`# ssh -p xxxx user@localhost`。
-- 通过 sftp 登录：`sftp -oPort=xxxx user@localhost`。
+- 通过 ssh 登录：`# ssh -p xxxx jovyan@localhost`。
+- 通过 sftp 登录：`sftp -oPort=xxxx jovyan@localhost`。
 
 
 
