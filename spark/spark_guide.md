@@ -9,11 +9,24 @@
 在 Spark Shell 中，内置了一个 SparkContext 对象，其名为 `sc`。在启动 Spark Shell 时，可指定 `--master` 参数让 `sc` 连接相应 Spark 集群。
 
 ## Resilient Distributed Datasets (RDDs)
-RDD 是 Spark 的核心概念，其是分布在集群各节点上的元素的容错集合，因此其能并行(parallel)执行。有两种方法能创建 RDD 对象：并行化程序中已经存在的集合，如`sc.parallelize(collection)`；创建与外部存储系统关联的 dataset，如`sc.textFile("data.txt")`，注意此方法需要所有 worker node 都能访问到该文件，即若使用本地文件系统，则所有 worker node 都需要能在相同路径下访问到该文件。
+RDD 是 Spark 的核心概念，其是分布在集群各节点上的元素的容错集合，因此其能并行(parallel)执行。有两种方法能创建 RDD 对象：
+- 并行化程序中已经存在的集合，如`sc.parallelize(collection)`；
+- 创建与外部存储系统关联的 dataset，如`sc.textFile("data.txt")`，注意此方法需要所有 worker node 都能访问到该文件，即若使用本地文件系统，则所有 worker node 都需要能在相同路径下访问到该文件或使用共享存储访问该文件。
 
-RDD 支持两种类型的操作：转换（transformation） 和 动作（action）。转换即从已存在的 dataset 中生成新的 dataset，如`map`，动作即运行 dataset 并返回一个值，如`reduce`。在 Spark 中，所有转换都是懒惰的(lazy)，即它们不会立即执行，只有需要时才执行。
+RDD 支持两种类型的操作：
+- 转换(transformation)        
+转换即从已存在的 dataset 中生成新的 dataset，如`map`。在 Spark 中，所有转换都是懒惰的(lazy)，即它们不会立即执行，只有需要时才执行。
+- 动作(action)       
+动作即运行 dataset 并返回一个值，如`reduce`。默认情况下，每个转换过的 RDD 在执行动作(action)时可能会重新计算一次，当然也可调用 persist/cache 方法将其存储在内存或磁盘中，这样下次查询该 RDD 时速度会快很多。
 
-默认情况下，每个转换过的 RDD 在被执行动作时可能会重新计算一次，当然也可调用 persist/cache 方法将其存储在内存或磁盘中，这样下次查询该 RDD 时速度会快很多。
+如下例子：
+```
+val lines = sc.textFile("data.txt")
+val lineLengths = lines.map(s => s.length)
+val totalLength = lineLengths.reduce((a, b) => a + b)
+```
+
+- 第一行通过外部文件定义一个 RDD。
 
 ### 传递函数给 Spark
 在 scala 中，推荐两种方法将函数传递给 Spark：
