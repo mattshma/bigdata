@@ -114,7 +114,26 @@ public class WordCount {
 - Program arguments: input/ output/
 - Use classpath of module: wordcount
 
-### 创建输入目录 input
+或者点击 `main` 方法左边的绿色小三角执行代码，然后修改其配置如上述配置。
+
+### 创建输入目录 input 并执行程序
 在 src 同级目录（即项目根目录）下创建目录 input，然后创建一个或者几个文件做为输入文件。然后运行代码，可以看到，运行完成后，在项目根目录下会生成 output 目录，点击 part-r-00000 即可看到结果。若需要再次运行该代码，需先删除 output。
 
+## 上传 Jar 包执行
+若需要上传 jar 包到 Hadoop 环境中执行，在开发好程序后，无须在配置 Run Configuration 和 input 等，直接运行 `maven package` 打包。将生成的 target/wordcount-1.0-SNAPSHOT.jar 上传到 Hadoop 机器上，执行如下命令：
+```
+// 创建 input 目录
+$ hdfs dfs -mkdir /user/ma/input
+// 上传 wordcount 文本
+$ hdfs dfs -put wordcount.txt /user/ma/input
+// 执行 wordcount，格式为 hadoop jar JAR_Name Class_Name input output 
+$ hadoop jar wordcount-1.0-SNAPSHOT.jar com.ctrip.WordCount /user/ma/input /user/ma/output
+// 查看运行结果
+$ hdfs dfs -cat /user/admin/maming/pg/output/part-r-00000
+```
 
+当然以上过程需要该 hadoop 机器的默认配置都是正确的。如果默认不对，可通过 `--conf` 指定配置路径；或者在 maven 打包前，将 core-site.xml, hdfs-site.xml, mapred-site.xml, yarn-site.xml 拷贝到 resources 目录，这样打包时会将 resources 下的文件添加到 classpath 下。
+
+## 本地开发，远程调试
+
+将 core-site.xml, hdfs-site.xml, mapred-site.xml, yarn-site.xml 拷贝到 resources 目录下，设置 Run Configuration 中 Program arguments 为 hdfs 上文件路径，如 `hdfs://nameservice/user/ma/wordcount/input hdfs://nameservice/user/ma/wordcount/outpu`，然后执行即可。
