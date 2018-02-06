@@ -7,6 +7,7 @@
 - [Cloudera Blog](http://blog.cloudera.com/)
 - [有态度的HBase](http://hbasefly.com/)：专注于 HBase, Spark 等。
 - [Hbase Musings](http://blog.zahoor.in/)：内容不多且几年未更新了，但质量不错。
+- [Machine Learning for Humans](https://medium.com/machine-learning-for-humans): ML
 
 ### Github
 - Spark
