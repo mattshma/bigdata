@@ -10,7 +10,7 @@ Namespaces 是最顶层的数据容器，一个 namespace 相当于标准关系�
 
 一个数据库能指定多个 namespaces，每个 namespaces 都有各自对应的 policies。如下图，一个数据库有两个 namespaces：ns1 和 ns2，其中 ns1 将 record 存在磁盘中，ns2 将 record 存在内存中：
 
-![Namespaces using different storage engines](model_namespace_small.png)
+![Namespaces using different storage engines](../img/model_namespace_small.png)
 
 ## Sets
 Sets 相当于关系型数据库的表，其将多条 records 组织成一个集群。 Sets 继承了 namespace 的 policies，并能添加额外的 policies 和操作。
