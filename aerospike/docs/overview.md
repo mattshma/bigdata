@@ -33,13 +33,13 @@ Aerospike “shared nothing” 架构模式的目的是可靠存储 tb 级别的
 ### 数据存储层 
 Aerospike 是一个类似传统数据库结构的 kv 型存储。数据存储在 namespaces，类似于 RDBMS 系统中的数据库的概念。在一个 namespace 中，数据被分成 sets （类似 RDBMS 中的数据表），和 records （类似 RDBMS 中的行）。在 set 中的每个 record 都有一个唯一的索引 key，和一个或多个 bins（类似 RDBMS 中的列）用于存放与 record 相关的值。
 
-> 关系对应表：
-> | RDBMS  | Aerospike
-> |--------|--------
-  | Database | Namespace
-  | Table   | Set
-  | Row    | Record
->  | Column  | Bin
+关系对应表：
+| RDBMS  | Aerospike
+|--------|--------
+| Database | Namespace
+| Table   | Set
+| Row    | Record
+ | Column  | Bin
 
 bin 的值是强类型的，其能包括任意支持的数据类型，bin 没有类型概念，因此不同 record 的同一 bin 的值可以是不同类型的。索引（即key，包括一级索引和二级索引）存储在 DRAM 方便快速读取，面值能存储在 DRAM 或 SSD 中。不同的 namespace 能配置不同的存储，因此对于数据量较小的 namespace 可将其值也存储在 DRAM 中， 对数据量大的 namespace 将其值存储在 SSD 中。
 
