@@ -8,6 +8,6 @@ export JMX_PORT=${JMX_PORT:-9999}
 
 打开 jconsole，输入 `service:jmx:rmi:///jndi/rmi://<IP>:<PORT>/jmxrmi`，如下图：
 
-![connect](../img/jmx_1.jpg)
+![connect](../imgs/jmx_1.jpg)
 
-![info](../img/jmx_2.jpg)
+![info](../imgs/jmx_2.jpg)
