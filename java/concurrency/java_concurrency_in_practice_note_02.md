@@ -34,4 +34,49 @@ volatile boolean asleep;
 
 **加锁机制既可以确保可见性又可以确保原子性，而 `volatile` 变量只能确保可见性**，即volatile 的语义不足以保证复合操作的原子性。
 
+## 发布与逸出
+[参考源码](http://jcip.net/listings/ThisEscape.java)：
+```
+public class ThisEscape {
+    public ThisEscape(EventSource source) {
+        source.registerListener(new EventListener() {
+            public void onEvent(Event e) {
+                doSomething(e);
+            }
+        });
+    }
 
+    void doSomething(Event e) {
+    }
+
+
+    interface EventSource {
+        void registerListener(EventListener e);
+    }
+
+    interface EventListener {
+        void onEvent(Event e);
+    }
+
+    interface Event {
+    }
+}
+```
+
+## 线程封闭
+当访问共享的可变数据时，通常需要使用同步，一种避免使用同步的方式就是不共享数据，如果单线程内访问数据，就不需要同步，这种技术被称为线程封闭（Thread Confinement）。当对象被封闭在一个线程中时，这种用法将自动实现线程安全性，即使被封闭的对象本身不是线程安全的。Swing 大量使用了线程封闭技术，Swing 应用程序的许多并发错误都是由于错误的在另一个线程中使用了这些被封闭的对象。
+
+不过需要注意的是，Java 语言无法强制将对象封闭在某个线程中，线程封闭是程序设计中的一个考虑因素，必须在程序中实现。
+
+### Ad-hoc 线程封闭
+Ad-hoc 线程封闭是指维护线程封闭性的职责完全由程序实现来承担。Ad-hoc 线程封闭非常脆弱，因为没有任何语言特性，能将对象封闭到目标线程上，所以在程序中尽量少使用该技术。
+
+在 volatile 变量上存在一种特殊的线程封闭，只要能确保只有单个线程对共享的 volatile 变量执行写入操作，那么就可以安全的在这些共享的 volatile 变量上执行 “读取-修改-写入” 操作。此时相当于将修改操作封闭在单个线程中以防止发生竞态条件。
+
+### 栈封闭
+栈封闭是线程封闭的一种特例，**在栈封闭中，只能通过局部变量才能访问对象**。局部变量的固有属性之一就是封闭在执行线程中，它们位于执行线程的栈中，其他线程无法访问这个栈。
+
+由于任何方法都无法获得对基本类型的引用，所以基本类型的局部变量始终封闭在线程内。而对于对象引用而言，需要程序不对外返回对象引用。
+
+### ThreadLocal 类
+维持线程封闭性的一种更规范方法是使用 ThreadLocal，该类提供了 `get` 和 `set` 等访问接口和方法，这些方法为每个使用该变量的线程都保存一份独立的副本，因此 `get` 总是返回由当前执行线程在调用 `set` 时设置的最新值。
