@@ -21,16 +21,22 @@
  C     | 了解原理，熟悉重要操作和基本流程。
  D     | 大致理解，懂一般流程。
 
-- ~~[HBase off heap]~~
-- ~~[Spark Shuffle]~~
-- ~~[Spark数据倾斜]~~
-- ~~[RPC分析](java/rpc.md)~~
+## Todo
+- [Dubbo](https://github.com/apache/incubator-dubbo)
+- Spring
+- ML
 
 ## Doing
-- ML
+- Kubernetes
 - Java
 
 ## Done:
 - [压缩](hadoop/hdfs/compression.md)
 - [集群调优](hadoop/hdfs/tune.md)
+
+## Out
+- ~~[HBase off heap]~~
+- ~~[Spark Shuffle]~~
+- ~~[Spark数据倾斜]~~
+- ~~[RPC分析](java/rpc.md)~~
 
