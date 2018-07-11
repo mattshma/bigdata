@@ -3,14 +3,14 @@
 
 ## TODO
 - ML
-  - 机器学习 -- B
+  - 机器学习 -- C
   - TensorFlow -- A
 - Cloud
   - Docker -- B
-  - Kubernetes -- C
+  - Kubernetes -- A
 - BigData 
   - Spark -- B
-  - Flink -- D
+  - Flink -- C
 
 ## 级别定义
 
@@ -28,7 +28,7 @@
 
 ## Doing
 - ML
-- Aerospike
+- Java
 
 ## Done:
 - [压缩](hadoop/hdfs/compression.md)
