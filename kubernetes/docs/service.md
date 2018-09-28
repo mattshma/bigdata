@@ -32,7 +32,7 @@ Kubernetes 集群中的每个节点都会运行 `kube-proxy` 服务。`kube-prox
 ### Proxy-mode: userspace
 在这种模式下，kube-proxy 监听 Kubernetes Maser 对 `Service` 和 `Endpoints` 的添加和删除操作。对于每个 Service 对象，proxy 会在本地节点上随机选择一个 port，该代理端口上（serviceIP:port）的所有连接都会被 proxy 捕获，接着安装 iptables 规则用于转发给 Service 后端的 Pods。默认使用 round-robin 算法来选择 Pod。
 
-![../img/services-userspace-overview.svg](userspace)
+![userspace](../img/services-userspace-overview.svg)
 
 
 
