@@ -76,7 +76,7 @@ func (b *Builder) Do() *Result {
 }
 ```
 
-正常情况下：`r.visitor = NewDecoratedVisitor(r.visitor, helpers...)`，即 `visitor` 为一个 [DecoratedVisitor](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/visitor.go#L297) 对象。由于拿到 Result 对象后，会调用其 [Visit()(https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/result.go#L95) 方法，而该方法会调用 Result 对象的 `visitor` 属性的 `Visit()`，所以接着看 `DecoratedVisitor` 的 [Visit()](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/visitor.go#L305) 方法，如下：
+正常情况下：`r.visitor = NewDecoratedVisitor(r.visitor, helpers...)`，即 `visitor` 为一个 [DecoratedVisitor](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/visitor.go#L297) 对象。由于拿到 Result 对象后，会调用其 [Visit()](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/result.go#L95) 方法，而该方法会调用 Result 对象的 `visitor` 属性的 `Visit()`，所以接着看 `DecoratedVisitor` 的 [Visit()](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/visitor.go#L305) 方法，如下：
 ```
 func (v DecoratedVisitor) Visit(fn VisitorFunc) error {
 	return v.visitor.Visit(func(info *Info, err error) error {
