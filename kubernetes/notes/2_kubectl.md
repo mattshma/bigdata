@@ -120,7 +120,98 @@ c.Post().
 
 由上可以看到，其中涉及了 Builder 模式和 Visitor 模式调用 REST 请求，并返回响应结果。
 
+## Visitor 设计模式简介
 
+由于 kubectl 中使用了 visitor 设计模式，这里简单讲解下其内容。
 
+先看下 visitor 模式的 UML 图：
 
+![visitor uml](img/visitor-uml.png) 
+
+其主要由接口 visitor （抽象访问者）及其实现类（具体访问者），接口 element （抽象元素）及其实现类（具体元素）和对象结构组成。
+- 抽象访问接口（visitor 接口）为具体元素类声明一个访问操作接口（通过 `visit()` 方法）
+- 具体访问者实现抽象访问接口中定义的操作，提供具体实现类需要的操作。
+- 抽象元素接口（element 接口）接受（accept）抽象访问者。
+- 具体元素类接受抽象访问者。
+- 对象结构遍历所有元素，接收各自访问者，访问者调用 `visit()` 方法执行具体元素类想执行的操作。
+
+代码 demo 如下：
+
+```
+package main
+
+import (
+	"fmt"
+	)
+
+type IVisitor interface {
+	Visit(IElement)
+}
+
+type ConcreteVisitor1 struct {}
+
+func (v *ConcreteVisitor1) Visit(element IElement) {
+	switch element.(type) {
+	case *ConcreteElementA:
+		fmt.Println("using ConcreteVisitor1. I'm concrete element a.")
+	case *ConcreteElementB:
+		fmt.Println("using ConcreteVisitor1. I'm concrete element b.")
+	}
+}
+
+type ConcreteVisitor2 struct {}
+
+func (v *ConcreteVisitor2) Visit(element IElement) {
+	switch element.(type) {
+	case *ConcreteElementA:
+		fmt.Println("using ConcreteVisitor2. I'm concrete element a.")
+	}
+}
+
+type IElement interface {
+	Accept(visitor IVisitor)
+}
+
+type ConcreteElementA struct {}
+
+func (e *ConcreteElementA) Accept(visitor IVisitor) {
+	visitor.Visit(e)
+}
+
+type ConcreteElementB struct {}
+
+func (e *ConcreteElementB) Accept(visitor IVisitor) {
+	visitor.Visit(e)
+}
+
+type ObjectStructure struct {
+	Items []IElement
+}
+
+func (ob *ObjectStructure) Add(element IElement) {
+	ob.Items = append(ob.Items, element)
+}
+
+func (ob *ObjectStructure) Accept(visitor IVisitor) {
+	for _, item := range ob.Items {
+		item.Accept(visitor)
+	}
+}
+
+func main() {
+	ob := new(ObjectStructure)
+	ob.Add(new(ConcreteElementA))
+	ob.Add(new(ConcreteElementB))
+
+	visitor1 := new(ConcreteVisitor1)
+	ob.Accept(visitor1)
+
+	visitor2 := new(ConcreteVisitor2)
+	ob.Accept(visitor2)
+}
+```
+
+## 参考
+- [java visitor pattern](https://www.baeldung.com/java-visitor-pattern)
+- [visitor.go](https://github.com/senghoo/golang-design-pattern/blob/master/23_visitor/visitor.go)
 
