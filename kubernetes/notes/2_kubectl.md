@@ -67,6 +67,18 @@ func (b *Builder) Do() *Result {
 	r := b.visitorResult()
 	r.mapper = b.Mapper()
 	...
+	helpers := []VisitorFunc{}
+	if b.defaultNamespace {
+		helpers = append(helpers, SetNamespace(b.namespace))
+	}
+	if b.requireNamespace {
+		helpers = append(helpers, RequireNamespace(b.namespace))
+	}
+	helpers = append(helpers, FilterNamespace)
+	if b.requireObject {
+		helpers = append(helpers, RetrieveLazy)
+	}
+
 	if b.continueOnError {
 		r.visitor = NewDecoratedVisitor(ContinueOnErrorVisitor{r.visitor}, helpers...)
 	} else {
@@ -76,7 +88,9 @@ func (b *Builder) Do() *Result {
 }
 ```
 
-正常情况下：`r.visitor = NewDecoratedVisitor(r.visitor, helpers...)`，即 `visitor` 为一个 [DecoratedVisitor](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/visitor.go#L297) 对象。由于拿到 Result 对象后，会调用其 [Visit()](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/result.go#L95) 方法，而该方法会调用 Result 对象的 `visitor` 属性的 `Visit()`，所以接着看 `DecoratedVisitor` 的 [Visit()](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/visitor.go#L305) 方法，如下：
+- 正常情况下：`r.visitor = NewDecoratedVisitor(r.visitor, helpers...)`，即 `Do()` 在设置 Result 对象的 `visitor` 为 [DecoratedVisitor](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/visitor.go#L297) 后将其返回。
+- 拿到 Result 对象后，会调用其 [Visit()](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/result.go#L95) 方法，而该方法会调用 Result 对象的 `visitor` 属性的 `Visit()`，即调用 `DecoratedVisitor` 的 `Visit()` 方法。
+- `DecoratedVisitor` 的 [Visit()](https://github.com/kubernetes/cli-runtime/blob/release-1.13/pkg/genericclioptions/resource/visitor.go#L305) 方法如下：
 ```
 func (v DecoratedVisitor) Visit(fn VisitorFunc) error {
 	return v.visitor.Visit(func(info *Info, err error) error {
@@ -92,8 +106,9 @@ func (v DecoratedVisitor) Visit(fn VisitorFunc) error {
 	})
 }
 ```
+该方法会遍历执行 `DecoratedVisitor` 对象的 `decorators` 属性方法，而从 `Do()` 方法中可以看到，`decorators` 用于设置 namespace 相关操作。
 
-`Visit()` 接着又执行了 [createAndRefresh()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/kubectl/cmd/create/create.go#L321) 方法，如下：
+回到 `create.go`，可以看到 `Visit()` 接着又执行了 [createAndRefresh()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/kubectl/cmd/create/create.go#L321) 方法，如下：
 ```
 func createAndRefresh(info *resource.Info) error {
 	obj, err := resource.NewHelper(info.Client, info.Mapping).Create(info.Namespace, true, info.Object, nil)
