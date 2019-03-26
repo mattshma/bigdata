@@ -104,7 +104,7 @@ type Command struct {
     PreRun func(cmd *Command, args []string)
     PreRunE func(cmd *Command, args []string) error
     Run func(cmd *Command, args []string)       // 实际起作用的函数，大部分命令仅需要实现它。
-    RunE func(cmd *Command, args []string) error
+    RunE func(cmd *Command, args []string) error // 同 Run 方法，不过还会返回 error 信息
     PostRun func(cmd *Command, args []string)
     PostRunE func(cmd *Command, args []string) error
     PersistentPostRun func(cmd *Command, args []string)
