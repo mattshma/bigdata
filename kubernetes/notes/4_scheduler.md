@@ -185,7 +185,7 @@ func (sched *Scheduler) scheduleOne() {
 		return
 	}
 	...
-	// 如果有合适的 host，则告诉 cache 假设(assume) pod 正运行在给定的节点上，即使当前还而进行绑定（bound）操作，以此减少调度的等待时间。
+	// 如果有合适的 host，则告诉 cache 假设(assume) pod 正运行在给定的节点上，即使当前还未进行绑定（bound）操作，以此减少调度的等待时间。
 	assumedPod := pod.DeepCopy()
 
 	// Assume volumes first before assuming the pod.
@@ -225,7 +225,21 @@ func (sched *Scheduler) scheduleOne() {
 }
 ```
 
-先看 [schedule()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/scheduler.go#L289)，调用了 [sched.config.Algorithm.Schedule()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/algorithm/scheduler_interface.go#L79) 进行选 host 的操作。这里看下 ScheduleAlgorithm 接口：
+可以看到，`scheduleOne()` 分为如下几个步骤：
+1. 调用 `sched.config.NextPod()` 取出一个 pod。
+2. 调用 `sched.schedule(pod)` 为 pod 选择合适的节点。
+3. 如果没有合适的节点，将会调用 `sched.preempt()` 开启抢占，进入下一个调度周期。
+4. 如果有合适的节点，则调用 `pod.DeepCopy()` 告诉 cache 假设(assume) pod 已运行在给定的节点上了，即使当前还未进行绑定（bound）操作，以此减少调度等待时间，提交效率。
+5. 调用 `sched.assumeVolumes()` 执行 assume volume，更新 volume cache。
+6. 调用 `sched.assume()`，执行 assume pod。
+7. 异步bind，先调用 `sched.bindVolumes()` 执行 bind volumes。再调用 `sched.bind()`，执行 bind pod 。
+
+接下来看下细节，先看第 1 步取 pod，其调用 [getNextPod()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/factory/factory.go)，从 [SchedulingQueue](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/internal/queue/scheduling_queue.go#L60) 队列中取出一个 pod。可以看到，SchedulingQueue 有两种实现方式：
+- [FIFO](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/internal/queue/scheduling_queue.go#L102)
+- [PriorityQueue](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/internal/queue/scheduling_queue.go#L207)   
+  PriorityQueue 由两个子队列组成，一个是 `activeQ` ，保存当前需调度的 pod，其是一个 Heap 结构，heap 头上的 pod 是优先级最高的 pod；另一个是 `unschedulableQ`，保存已尝试过并确定不可调度的 pod。
+
+接着看 [schedule()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/scheduler.go#L289)，调用了 [sched.config.Algorithm.Schedule()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/algorithm/scheduler_interface.go#L79) 进行选 host 的操作。这里看下 ScheduleAlgorithm 接口：
 ```
 type ScheduleAlgorithm interface {
 	// 传入 pod，返回合适的节点列表
