@@ -234,11 +234,17 @@ func (sched *Scheduler) scheduleOne() {
 6. 调用 `sched.assume()`，执行 assume pod。
 7. 异步bind，先调用 `sched.bindVolumes()` 执行 bind volumes。再调用 `sched.bind()`，执行 bind pod 。
 
-接下来看下细节，先看第 1 步取 pod，其调用 [getNextPod()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/factory/factory.go)，从 [SchedulingQueue](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/internal/queue/scheduling_queue.go#L60) 队列中取出一个 pod。可以看到，SchedulingQueue 有两种实现方式：
+接下来看下细节。
+
+### 取 pod
+
+调用 [getNextPod()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/factory/factory.go)，从 [SchedulingQueue](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/internal/queue/scheduling_queue.go#L60) 队列中取出一个 pod。可以看到，SchedulingQueue 有两种实现方式：
 - [FIFO](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/internal/queue/scheduling_queue.go#L102)
 - [PriorityQueue](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/internal/queue/scheduling_queue.go#L207)   
-  PriorityQueue 由两个子队列组成，一个是 `activeQ` ，保存当前需调度的 pod，其是一个 Heap 结构，heap 头上的 pod 是优先级最高的 pod；另一个是 `unschedulableQ`，保存已尝试过并确定不可调度的 pod。
+  PriorityQueue 由两个子队列组成，一个是 `activeQ` ，保存当前需调度的 pod，其是一个 [Heap](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/internal/queue/scheduling_queue.go#L738) 结构，heap 头上的 pod 是优先级最高的 pod；另一个是 `unschedulableQ`，保存已尝试过并确定不可调度的 pod。
+  如果指定了 pod priority，则使用 PriorityQueue，否则使用 FIFO。 
 
+### 选择节点
 接着看 [schedule()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/scheduler.go#L289)，调用了 [sched.config.Algorithm.Schedule()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/algorithm/scheduler_interface.go#L79) 进行选 host 的操作。这里看下 ScheduleAlgorithm 接口：
 ```
 type ScheduleAlgorithm interface {
@@ -299,6 +305,17 @@ type ScheduleAlgorithm interface {
   - NodeAffinityPriority: Prioritizes nodes that have labels matching NodeAffinity
   - TaintTolerationPriority: Prioritizes nodes that marked with taint which pod can tolerate
   - ImageLocalityPriority: ImageLocalityPriority prioritizes nodes that have images requested by the pod present
+
+  在 pirority 中过程中，可以看到 priority 函数是 Map-Reduce 的模式，使用 16 个 worker 进行 Map，然后使用 Reduce 进行合并。关于此更多的内容可参考 [issue-24246](https://github.com/kubernetes/kubernetes/issues/24246) 和 [issue-51455](https://github.com/kubernetes/kubernetes/issues/51455)。
+  
+### preempt 抢占
+  参考 [preempt()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/core/generic_scheduler.go#L239)。
+
+### assume
+  assume pod 已存在于 cache 中，这样可能异步进行 bind。具体参考 [assume](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/scheduler.go#L434)。
+
+### bind
+  pod bind 到 node 上，具体参考 [bind()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/scheduler.go#L480)
 
 ## 参考
 - [浅入了解容器编排框架调度器之 Kubernetes](https://zhuanlan.zhihu.com/p/29691157)
