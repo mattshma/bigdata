@@ -25,7 +25,6 @@
   - [playground](http://playground.tensorflow.org/)
 
 ### 资源
-- [网盘资源](https://yq.aliyun.com/articles/339384)
 - 云平台
   - [Colab](https://colab.research.google.com/notebooks/welcome.ipynb)
   - [Floydhub](https://www.floydhub.com/)
