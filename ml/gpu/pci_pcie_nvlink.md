@@ -23,7 +23,7 @@ PCI 的特点：
 
 随着数据传输越来越高的要求，PCI-X 和 AGP 走了两条不同的路线: PCI-X 不断提高时钟频率，而 AGP 则是在一个时钟周期内传输多次数据来提速。不过随着频率的提升，并行传输遇到了干扰问题。而在 2001 年 Intel 公布了取代 PCI 总线的第三代 I/O 技术，2002 年 PCI-SIG 审核通过 PCIe 相关的规范。PCIe 的拓扑结构如下：
 
-![pcie topology](imgs/pcie-topology.svg)
+![pcie topology](imgs/pcie-topology.jpg)
 
 ### PCIe 硬件协议
 PCIe 基于一个单向的**点对点连接**，其被称为 lane，一个典型结构是一个 root port 与一个 endpoint 组成一个 lane，而 Switch 可同时连接几个 endpoint，一个 lane 需要一个单独的 PCI bus。这一点 PCIe 与早期 PCI 连接不同，PCI 连接基于总线控制，所有设备共享双向并行总线。PCIe 是一个多层协议，由事务层、数据交换层和物理层组成，物理层又可以分为逻辑子层和电气子层，逻辑子层又可分为物理代码子层（PCS）和介质接入控制子层（MAC）。
