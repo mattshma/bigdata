@@ -38,7 +38,7 @@ PCIe 基于一个单向的**点对点连接**，其被称为 lane，一个典型
 PCIe 规范主要是为了提升计算机内部所有总线的速度，因此带宽有多种不同规格标准，参考维基百科：
 ![pcie带宽](imgs/pcie-bandwidth.png)
 
-以上带宽是单向 lane 计算的，若是双工方式，则带宽还需要乘以 2，如 PCIe x16 双工的带宽会接近 32GB/s 左右。
+以上带宽是单向 lane 计算的，若是双工方式，则带宽还需要乘以 2，如 PCIe Gen3 x16 双工的带宽会接近 32GB/s 左右。
 
 以下是 PCIe 与其他传输规格的对比：
 
@@ -59,8 +59,30 @@ PCIe 相比 PCI 最大的改变是由并行改为了串行，并通过差分信�
 
 另外 PCI 由于地址/数据线太多，不得不复用线路，因此基本都是半双工的，而串行能做到全双工。
 
+
+## NVLink
+由于 PCIe 带宽日益成为多 GPU 系统级别的瓶颈，深度学习工作负载的快速增长使得对更快速、更可扩展的互连的需求逐渐增加。NVLink™ 技术提供更高带宽与更多链路，并可提升多 GPU 和多 GPU/CPU 系统配置的可扩展性。如下是官网的几张图：
+
+Tesla V100 中以 NVLink 连接的 GPU 至 GPU 和 GPU 至 CPU 通信（六条 NVLink 链路）:
+![Tesla V100 中以 NVLink 连接的 GPU 至 GPU 和 GPU 至 CPU 通信](imgs/tesla-v100-nvlink-gpu-cpu-diagram-625-udt.png)
+
+在 DGX-1V 服务器中，混合立体网络拓扑使用 NVLink 连接 8 个 Tesla V100 加速器:
+![在 DGX-1V 服务器中，混合立体网络拓扑使用 NVLink 连接 8 个 Tesla V100 加速器](imgs/tesla-v100-nvlink-hybrid-cube-mesh-diagram-625-udt.png)
+
+而根据官网数据，使用 NVLink 的 P100 的带宽是 160GB/s，是 PCIe GEN3 x16 带宽的 5 倍左右。而在 V100 中，由于其支持多达六条 NVLink 链路，使得总带宽为 300 GB/s，这是 PCIe GEN3 x16 带宽的 10 倍。
+
+![NVLikn Performance](imgs/deep-learning-nvlink-performance-chart-625-udt.png)
+
+### NVSwitch
+> NVLink 实现了很大的进步，可以在单个服务器中支持八个 GPU，并且可提升性能，使之超越 PCIe。但是，要将深度学习性能提升到一个更高水平，将需要使用 GPU 架构，该架构在一台服务器上支持更多的 GPU 以及 GPU 之间的全带宽连接。
+
+> NVIDIA NVSwitch 是首款节点交换架构，可支持单个服务器节点中 16 个全互联的 GPU，并可使全部 8 个 GPU 对分别以 300 GB/s 的惊人速度进行同时通信。这 16 个全互联的 GPU 还可作为单个大型加速器，拥有 0.5 TB 统一显存空间和 2 PetaFLOPS 计算性能。
+
+![NVSWITCH](imgs/nvidia-nvswitch-diagram.jpg)
+
 ## 参考
 - [PCI vs PCIe](https://wiki.qemu.org/images/f/f6/PCIvsPCIe.pdf)
 - [PCI 局部总线](https://docs.oracle.com/cd/E19253-01/819-7057/hwovr-22/index.html)
 - [PCI Express](https://zh.wikipedia.org/wiki/PCI_Express)
 - [深入PCI与PCIe之一：硬件篇](https://zhuanlan.zhihu.com/p/26172972)
+- [NVLINK结构](https://www.nvidia.cn/data-center/nvlink/)
