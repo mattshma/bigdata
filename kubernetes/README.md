@@ -10,5 +10,6 @@
 - [kubectl](notes/2_kubectl.md)
 - [apiserver](notes/3_apiserver.md)
 - [scheduler](notes/4_scheduler.md)
-- [controller-manager](notes/5_controller_manager.md)
-- [informer.md](6_informer.md)
+- [scheduler extender](notes/5_scheduler_extender.md)
+- [controller manager](notes/6_controller_manager.md)
+- [informer.md](7_informer.md)
