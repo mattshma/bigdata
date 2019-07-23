@@ -12,4 +12,5 @@
 - [scheduler](notes/4_scheduler.md)
 - [scheduler extender](notes/5_scheduler_extender.md)
 - [controller manager](notes/6_controller_manager.md)
-- [informer.md](7_informer.md)
+- [informer.md](notes/7_informer.md)
+- [device plugin](notes/8_device_plugin.md)
