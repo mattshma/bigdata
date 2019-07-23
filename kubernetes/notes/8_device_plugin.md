@@ -141,7 +141,7 @@ message Device {
 
 ```
 
-![device plugin](img/device_plugin.png)
+![device plugin](img/device-plugin.png)
 
 ### 健康检测及灾难恢复
 
