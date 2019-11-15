@@ -64,3 +64,6 @@ Aerospike 同时提供了 [管理组件](https://www.aerospike.com/docs/amc/inde
 
 ## 创建应用
 定义好 namespace 后，就能使用 Aerospike 提供的工具判断数据是否被正确存储。为执行操作，使用 Smart Client 来实例化应用，Smart Client 拥有位置感知能力，其在不影响性能的情况下知道如何存储和获取数据。
+
+## 参考
+- [Architecture Overview](https://www.aerospike.com/docs/architecture/index.html)

@@ -150,8 +150,14 @@ message Device {
 - 但不希望 kubelet 失败或重启正在使用这些设备的任何 pod 或容器。
 - 如果 kubelet 正在分配设备，那么应该使容器设备失败。
 
-## k8s-device-plugin
-这里以 nvidia/k8s-device-plugin 为例说下如何使用 Device Plugin。
+## 应用
+这里以 [nvidia/k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin) 为例说下如何使用 Device Plugin。
+
+其他例子：
+- [RDMA device plugin](https://github.com/hustcat/k8s-rdma-device-plugin)
+- [FPGA device plugin](https://github.com/Xilinx/FPGA_as_a_Service/tree/master/k8s-fpga-device-plugin/trunk)
+- [Collection of Intel device plugins](https://github.com/intel/intel-device-plugins-for-kubernetes)
+- [SRIOV Network device plugin](https://github.com/intel/sriov-network-device-plugin)
 
 ## 参考
 - [Device Manager Proposal](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/resource-management/device-plugin.md)

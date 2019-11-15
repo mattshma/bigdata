@@ -7,8 +7,7 @@
 ### 基础
 - 机器学习实战
   - [视频](https://space.bilibili.com/97678687/channel/detail?cid=22486)      
-  - [PDF](https://yun.baidu.com/s/1cCOAAE)
-  - [Markdown](https://github.com/apachecn/AiLearning/tree/master/docs/ml)     
+  - [英文版 PDF](http://www2.ift.ulaval.ca/~chaib/IFT-4102-7025/public_html/Fichiers/Machine_Learning_in_Action.pdf)
 
 - 利用 python 进行数据分析       
 

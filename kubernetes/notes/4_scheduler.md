@@ -318,6 +318,7 @@ type ScheduleAlgorithm interface {
   pod bind 到 node 上，具体参考 [bind()](https://github.com/kubernetes/kubernetes/blob/release-1.13/pkg/scheduler/scheduler.go#L480)
 
 ## 参考
+- [The Kubernetes Scheduler](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-scheduling/scheduler.md)
 - [浅入了解容器编排框架调度器之 Kubernetes](https://zhuanlan.zhihu.com/p/29691157)
 - [The Kubernetes Scheduler](https://medium.com/@dominik.tornow/the-kubernetes-scheduler-cd429abac02f)
 - [kubernetes 简介：调度器和调度算法](https://cizixs.com/2017/03/10/kubernetes-intro-scheduler/)

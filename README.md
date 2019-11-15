@@ -3,11 +3,11 @@
 
 ## TODO
 - ML
-  - 机器学习 -- C
   - TensorFlow -- A
+  - 机器学习 -- C
 - Cloud
-  - Docker -- B
   - Kubernetes -- A
+  - Docker -- B
 - BigData 
   - Spark -- B
   - Flink -- C
