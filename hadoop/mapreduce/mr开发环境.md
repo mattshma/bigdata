@@ -127,7 +127,7 @@ $ hdfs dfs -mkdir /user/ma/input
 // 上传 wordcount 文本
 $ hdfs dfs -put wordcount.txt /user/ma/input
 // 执行 wordcount，格式为 hadoop jar JAR_Name Class_Name input output 
-$ hadoop jar wordcount-1.0-SNAPSHOT.jar com.ctrip.WordCount /user/ma/input /user/ma/output
+$ hadoop jar wordcount-1.0-SNAPSHOT.jar WordCount /user/ma/input /user/ma/output
 // 查看运行结果
 $ hdfs dfs -cat /user/admin/maming/pg/output/part-r-00000
 ```

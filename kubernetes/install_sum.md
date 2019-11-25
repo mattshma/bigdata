@@ -135,7 +135,7 @@ $ sudo docker run hello-world
 - 配置 docker
 创建文件：`/etc/sysconfig/docker`，内容如下：
 ```
-OPTIONS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --registry-mirror=http://mirror-hub.cloud.ctripcorp.com --insecure-registry=mirror-hub.cloud.ctripcorp.com --insecure-registry=hub.cloud.ctripcorp.com"
+OPTIONS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --registry-mirror=xxxx --insecure-registry=xxx --insecure-registry=xxx"
 ```
 
 - 配置 docker 网络
@@ -230,7 +230,7 @@ KUBE_MASTER="--master=http://10.8.217.86:8080"
 KUBELET_ADDRESS="--address=0.0.0.0"
 KUBELET_PORT="--port=10250"
 KUBELET_ALLOW_PRI="--allow-privileged=true"
-KUBELET_POD_INFRA_CONTAINER="--pod-infra-container-image=hub.cloud.ctripcorp.com/tmeng/pod-infrastructure:v3.5.5.26-2"
+KUBELET_POD_INFRA_CONTAINER="--pod-infra-container-image=xxx/xxx/pod-infrastructure:v3.5.5.26-2"
 # 若 KUBELET_HOSTNAME 值为 ""，则使用 Node 节点的 Hostname 做 Kubelet 的 Hostname。
 #KUBELET_HOSTNAME=""
 # kubelet_api_server="--api-servers=http://10.8.122.167:8080"
@@ -371,7 +371,7 @@ $ sudo cp lib64/* /usr/lib64
 执行命令：`sudo mkdir /etc/systemd/system/docker.service.d`，创建文件：/etc/systemd/system/docker.service.d/http-proxy.conf，内容如下：
 ```
 [Service]
-Environment="HTTP_PROXY=http://proxy1.sh2.ctripcorp.com:8080/" "HTTPS_PROXY=http://proxy1.sh2.ctripcorp.com:8080/" "NO_PROXY=localhost,127.0.0.1,10.8.0.0/16"
+Environment="HTTP_PROXY=xxxx" "HTTPS_PROXY=xxxx" "NO_PROXY=localhost,127.0.0.1,10.8.0.0/16"
 ```
 执行如下命令更新配置：
 ```

@@ -121,7 +121,7 @@ Projection 需要通过属性的 getter 方法来获取属性，即属性为 fir
 ## 报错
 - could not resolve property
 ```
-Caused by: org.hibernate.QueryException: could not resolve property: project of: com.ctrip.dpp.persistence.entity.DppHBaseTable [SELECT t.hbaseCluster, t.tableName FROM com.ctrip.dpp.persistence.entity.DppHBaseTable t join t.project p on t.proName = p.proName]
+Caused by: org.hibernate.QueryException: could not resolve property: project of: persistence.entity.DppHBaseTable [SELECT t.hbaseCluster, t.tableName FROM dpp.persistence.entity.DppHBaseTable t join t.project p on t.proName = p.proName]
     at org.hibernate.QueryException.generateQueryException(QueryException.java:137)
 ```
 

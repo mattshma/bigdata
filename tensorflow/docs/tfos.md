@@ -330,11 +330,11 @@ yarn application -kill <Spark-Streaming-Application>
 ```
 [Stage 0:=========>         (1 + 1) / 2][Stage 1:>                 (0 + 5) / 10]19/04/09 20:26:11 TRACE MessageDecoder: Received message OneWayMessage: OneWayMessage{body=NettyManagedBuffer{buf=CompositeByteBuf(ridx: 5, widx: 9530, cap: 9530, components=17)}}
 19/04/09 20:26:11 TRACE MessageDecoder: Received message OneWayMessage: OneWayMessage{body=NettyManagedBuffer{buf=CompositeByteBuf(ridx: 5, widx: 10529, cap: 10529, components=3)}}
-19/04/09 20:26:11 INFO TaskSetManager: Starting task 5.0 in stage 1.0 (TID 7, svr11929hw2288.hadoop.sh2.ctripcorp.com, executor 2, partition 5, ANY, 5457 bytes)
-19/04/09 20:26:11 INFO TaskSetManager: Starting task 6.0 in stage 1.0 (TID 8, svr11929hw2288.hadoop.sh2.ctripcorp.com, executor 2, partition 6, ANY, 5457 bytes)
+19/04/09 20:26:11 INFO TaskSetManager: Starting task 5.0 in stage 1.0 (TID 7, executor 2, partition 5, ANY, 5457 bytes)
+19/04/09 20:26:11 INFO TaskSetManager: Starting task 6.0 in stage 1.0 (TID 8, executor 2, partition 6, ANY, 5457 bytes)
 19/04/09 20:26:11 TRACE MessageDecoder: Received message OneWayMessage: OneWayMessage{body=NettyManagedBuffer{buf=PooledUnsafeDirectByteBuf(ridx: 13, widx: 1669, cap: 65536)}}
 19/04/09 20:26:11 TRACE MessageDecoder: Received message OneWayMessage: OneWayMessage{body=NettyManagedBuffer{buf=PooledUnsafeDirectByteBuf(ridx: 13, widx: 1669, cap: 65536)}}
-19/04/09 20:26:11 WARN TaskSetManager: Lost task 2.0 in stage 1.0 (TID 4, svr11929hw2288.hadoop.sh2.ctripcorp.com, executor 2): org.apache.spark.api.python.PythonException: Traceback (most recent call last):
+19/04/09 20:26:11 WARN TaskSetManager: Lost task 2.0 in stage 1.0 (TID 4, executor 2): org.apache.spark.api.python.PythonException: Traceback (most recent call last):
   File "/opt/data/10/yarn/local/usercache/admin/appcache/application_1549945841103_0043/container_e60_1549945841103_0043_01_000003/pyspark.zip/pyspark/worker.py", line 177, in main
     process()
   File "/opt/data/10/yarn/local/usercache/admin/appcache/application_1549945841103_0043/container_e60_1549945841103_0043_01_000003/pyspark.zip/pyspark/worker.py", line 172, in process
